@@ -90,6 +90,7 @@ class RadarRepository(private val client: OkHttpClient) {
         source.getPixels(pixels, 0, w, RadarGrid.cropLeft, RadarGrid.cropTop, w, h)
         source.recycle()
 
+        fillBlackFromNeighbours(pixels, w, h)
         val levels = ByteArray(w * h)
         for (i in pixels.indices) {
             val argb = pixels[i]
@@ -107,6 +108,34 @@ class RadarRepository(private val client: OkHttpClient) {
         }
         val image = Bitmap.createBitmap(pixels, w, h, Bitmap.Config.ARGB_8888)
         return RadarFrame(time, image, levels)
+    }
+
+    /**
+     * Černý popisek („CZRAD - Z: MAX - …“) a rámeček leží přímo v datech a po zprůhlednění by
+     * v srážkách zůstaly díry ve tvaru písmen. Tahy jsou 1–2 px, takže je doplníme nejbližším
+     * nečerným sousedem (hledáme do vzdálenosti 3 px).
+     */
+    private fun fillBlackFromNeighbours(pixels: IntArray, w: Int, h: Int) {
+        val source = pixels.copyOf()
+        fun isBlack(argb: Int) = argb ushr 24 != 0 && argb and 0xFFFFFF == FRAME_BLACK
+        for (y in 0 until h) for (x in 0 until w) {
+            if (!isBlack(source[y * w + x])) continue
+            pixels[y * w + x] = nearestNonBlack(source, w, h, x, y, ::isBlack)
+        }
+    }
+
+    private inline fun nearestNonBlack(
+        source: IntArray, w: Int, h: Int, x: Int, y: Int, isBlack: (Int) -> Boolean,
+    ): Int {
+        for (r in 1..3) for (dy in -r..r) for (dx in -r..r) {
+            if (maxOf(kotlin.math.abs(dx), kotlin.math.abs(dy)) != r) continue
+            val nx = x + dx
+            val ny = y + dy
+            if (nx !in 0 until w || ny !in 0 until h) continue
+            val c = source[ny * w + nx]
+            if (!isBlack(c)) return c
+        }
+        return 0
     }
 
     private fun url(time: Instant) = BASE_URL + "pacz2gmaps3.z_max3d." + FILE_TIME.format(time) + ".0.png"
