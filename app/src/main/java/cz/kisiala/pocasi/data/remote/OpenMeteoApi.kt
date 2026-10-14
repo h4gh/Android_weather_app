@@ -15,14 +15,28 @@ interface OpenMeteoApi {
         @Query("longitude") longitude: Double,
         @Query("models") models: String = MODEL,
         @Query("timezone") timezone: String = "auto",
-        @Query("forecast_days") forecastDays: Int = 3,
+        @Query("forecast_days") forecastDays: Int = FORECAST_DAYS,
         @Query("current", encoded = true) current: String = VARIABLES,
         @Query("hourly", encoded = true) hourly: String = VARIABLES,
+        @Query("daily", encoded = true) daily: String = DAILY_VARIABLES,
     ): ForecastResponse
 
     companion object {
         const val BASE_URL = "https://api.open-meteo.com/"
         const val MODEL = "chmi_aladin_seamless"
+
+        /** Dnešek + 5 dní výhledu – jeden dotaz pro obrazovky Dnes i Výhled. */
+        const val FORECAST_DAYS = 6
+
+        private val DAILY_VARIABLES = listOf(
+            "temperature_2m_max",
+            "temperature_2m_min",
+            "precipitation_sum",
+            "precipitation_probability_max",
+            "wind_speed_10m_max",
+            "wind_gusts_10m_max",
+            "wind_direction_10m_dominant",
+        ).joinToString(",")
 
         private val VARIABLES = listOf(
             "temperature_2m",

@@ -3,9 +3,11 @@ package cz.kisiala.pocasi.data
 import cz.kisiala.pocasi.data.remote.ForecastResponse
 import cz.kisiala.pocasi.data.remote.OpenMeteoApi
 import cz.kisiala.pocasi.model.CurrentWeather
+import cz.kisiala.pocasi.model.DailyWeather
 import cz.kisiala.pocasi.model.Forecast
 import cz.kisiala.pocasi.model.HourlyWeather
 import cz.kisiala.pocasi.model.Place
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class WeatherRepository(private val api: OpenMeteoApi) {
@@ -49,5 +51,22 @@ internal fun ForecastResponse.toForecast(): Forecast {
             isDay = h.isDay.getOrNull(i) != 0,
         )
     }
-    return Forecast(current = currentWeather, hourly = hours)
+    val d = daily
+    val days = d?.time?.indices?.mapNotNull { i ->
+        val date = LocalDate.parse(d.time[i])
+        val max = d.temperatureMax.getOrNull(i) ?: return@mapNotNull null
+        val min = d.temperatureMin.getOrNull(i) ?: return@mapNotNull null
+        DailyWeather(
+            date = date,
+            temperatureMax = max,
+            temperatureMin = min,
+            precipitationSum = d.precipitationSum.getOrNull(i) ?: 0.0,
+            precipitationProbability = d.precipitationProbabilityMax.getOrNull(i),
+            windSpeedMax = d.windSpeedMax.getOrNull(i) ?: 0.0,
+            windGustsMax = d.windGustsMax.getOrNull(i),
+            windDirectionDominant = d.windDirectionDominant.getOrNull(i) ?: 0,
+            hours = hours.filter { it.time.toLocalDate() == date },
+        )
+    }.orEmpty()
+    return Forecast(current = currentWeather, hourly = hours, daily = days)
 }

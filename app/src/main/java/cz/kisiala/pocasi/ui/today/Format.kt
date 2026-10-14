@@ -11,6 +11,12 @@ const val STRONG_WIND_KMH = 20
 
 fun formatTemperature(celsius: Double): String = "${celsius.roundToInt()}°"
 
+/** Srážky v mm s českou desetinnou čárkou: „4,2“, „0,5“, celá čísla bez desetin („2“, „0“). */
+fun formatPrecipitation(mm: Double): String {
+    val tenths = (mm * 10).roundToInt()
+    return if (tenths % 10 == 0) (tenths / 10).toString() else "${tenths / 10},${tenths % 10}"
+}
+
 /** Směr, odkud vítr vane, česky (S, SV, V, JV, J, JZ, Z, SZ). */
 fun windDirectionName(degrees: Int): String {
     val names = arrayOf("S", "SV", "V", "JV", "J", "JZ", "Z", "SZ")

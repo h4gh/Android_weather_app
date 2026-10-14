@@ -2,12 +2,15 @@ package cz.kisiala.pocasi.model
 
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.math.roundToInt
 
 /** Předpověď pro jedno místo, převedená z odpovědi Open-Meteo. Časy jsou v místním čase místa. */
 data class Forecast(
     val current: CurrentWeather,
-    /** Všechny hodinové hodnoty (od půlnoci dneška, 3 dny dopředu). */
+    /** Všechny hodinové hodnoty (od půlnoci dneška do konce předpovědi). */
     val hourly: List<HourlyWeather>,
+    /** Denní souhrny od dneška (dnešek + 5 dní). */
+    val daily: List<DailyWeather> = emptyList(),
 ) {
     /** Index hodiny odpovídající aktuálnímu stavu. */
     private val currentHourIndex: Int by lazy {
@@ -27,6 +30,10 @@ data class Forecast(
 
     val todayMax: Double get() = today.maxOfOrNull { it.temperature } ?: current.temperature
     val todayMin: Double get() = today.minOfOrNull { it.temperature } ?: current.temperature
+
+    /** Dny výhledu od zítřka. */
+    fun outlook(days: Int): List<DailyWeather> =
+        daily.filter { it.date > current.time.toLocalDate() }.take(days)
 
     /** Tendence tlaku za poslední 3 hodiny (příp. následující, pokud data zpětně chybí). */
     val pressureTrend: PressureTrend by lazy {
@@ -117,3 +124,46 @@ enum class WeatherCondition(val icon: WeatherIconType) {
 }
 
 enum class WeatherIconType { Clear, PartlyCloudy, Cloudy, Rain, Snow }
+
+/** Denní souhrn z `daily` dat Open-Meteo, doplněný hodinovými hodnotami daného dne. */
+data class DailyWeather(
+    val date: LocalDate,
+    val temperatureMax: Double,
+    val temperatureMin: Double,
+    val precipitationSum: Double,
+    /** Max. pravděpodobnost srážek v %; `null`, pokud ji model nevrací. */
+    val precipitationProbability: Int?,
+    val windSpeedMax: Double,
+    val windGustsMax: Double?,
+    /** Převládající směr větru (odkud vane), ve stupních. */
+    val windDirectionDominant: Int,
+    val hours: List<HourlyWeather>,
+) {
+    private val daytime: List<HourlyWeather>
+        get() = hours.filter { it.time.hour in DAYTIME_HOURS }.ifEmpty { hours }
+
+    /** Průměrná vlhkost za den (%). */
+    val humidity: Int?
+        get() = hours.mapNotNull { it.humidity }.takeIf { it.isNotEmpty() }?.average()?.roundToInt()
+
+    /** Průměrný tlak za den (hPa). */
+    val pressure: Double?
+        get() = hours.mapNotNull { it.pressure }.takeIf { it.isNotEmpty() }?.average()
+
+    /**
+     * Stav dne odvozený stejně jako u hodin ([WeatherCondition.from]) z průměrné denní oblačnosti;
+     * srážky se počítají až od [DAY_RAIN_THRESHOLD_MM] za den (pár desetin = jen přeháňka).
+     */
+    val condition: WeatherCondition
+        get() {
+            val cloudCover = daytime.mapNotNull { it.cloudCover }.takeIf { it.isNotEmpty() }?.average()?.roundToInt() ?: 50
+            if (precipitationSum < DAY_RAIN_THRESHOLD_MM) return WeatherCondition.from(cloudCover, 0.0, temperatureMax)
+            val wettestHour = hours.maxOfOrNull { it.precipitation } ?: precipitationSum
+            return WeatherCondition.from(cloudCover, wettestHour.coerceAtLeast(0.1), temperatureMax)
+        }
+
+    private companion object {
+        val DAYTIME_HOURS = 7..20
+        const val DAY_RAIN_THRESHOLD_MM = 1.0
+    }
+}

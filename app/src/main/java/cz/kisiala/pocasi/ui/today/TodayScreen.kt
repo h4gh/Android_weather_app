@@ -23,21 +23,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material.icons.outlined.MyLocation
-import androidx.compose.material.icons.outlined.Place
-import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -63,7 +55,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -73,6 +64,11 @@ import cz.kisiala.pocasi.BuildConfig
 import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.model.Forecast
 import cz.kisiala.pocasi.model.Place
+import cz.kisiala.pocasi.ui.ForecastViewModel
+import cz.kisiala.pocasi.ui.common.ErrorState
+import cz.kisiala.pocasi.ui.common.LoadingState
+import cz.kisiala.pocasi.ui.common.PlacesMenu
+import cz.kisiala.pocasi.ui.common.message
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -81,7 +77,7 @@ import kotlin.math.roundToInt
 fun TodayScreen(
     onOpenRadar: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: TodayViewModel = viewModel(factory = TodayViewModel.Factory),
+    viewModel: ForecastViewModel = viewModel(factory = ForecastViewModel.Factory),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -134,12 +130,6 @@ fun TodayScreen(
 
     if (showAbout) AboutDialog(onDismiss = { showAbout = false })
 }
-
-private val LoadError.message: Int
-    get() = when (this) {
-        LoadError.Network -> R.string.error_network
-        LoadError.Other -> R.string.error_generic
-    }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -207,49 +197,6 @@ private fun TodayTopBar(
             }
         },
     )
-}
-
-/** Přepínání míst – připraveno na budoucí oblíbená místa (přibudou do [places]). */
-@Composable
-private fun PlacesMenu(
-    expanded: Boolean,
-    selected: Place?,
-    places: List<Place>,
-    onSelect: (Place) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
-        places.forEach { place ->
-            DropdownMenuItem(
-                text = {
-                    Text(
-                        if (place.isCurrentLocation) {
-                            "${place.name} · ${stringResource(R.string.place_my_location)}"
-                        } else {
-                            place.name
-                        },
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        if (place.isCurrentLocation) Icons.Outlined.MyLocation else Icons.Outlined.Place,
-                        contentDescription = null,
-                    )
-                },
-                trailingIcon = {
-                    if (place.id == selected?.id) Icon(Icons.Outlined.Check, contentDescription = null)
-                },
-                onClick = { onSelect(place) },
-            )
-        }
-        HorizontalDivider()
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.favorites_coming_soon)) },
-            leadingIcon = { Icon(Icons.Outlined.StarOutline, contentDescription = null) },
-            enabled = false,
-            onClick = {},
-        )
-    }
 }
 
 @Composable
@@ -428,53 +375,6 @@ fun WeatherCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         content = content,
     )
-}
-
-@Composable
-private fun LoadingState() {
-    Column(
-        Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        CircularProgressIndicator()
-        Text(
-            stringResource(R.string.loading),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
-private fun ErrorState(error: LoadError, onRetry: () -> Unit) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Icon(
-            Icons.Outlined.CloudOff,
-            contentDescription = null,
-            modifier = Modifier.size(48.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            stringResource(R.string.error_title),
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            stringResource(error.message),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(4.dp))
-        Button(onClick = onRetry) { Text(stringResource(R.string.action_retry)) }
-    }
 }
 
 @Composable

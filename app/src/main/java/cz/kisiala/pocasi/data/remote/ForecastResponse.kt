@@ -10,6 +10,7 @@ data class ForecastResponse(
     val timezone: String? = null,
     val current: CurrentDto,
     val hourly: HourlyDto,
+    val daily: DailyDto? = null,
 )
 
 @Serializable
@@ -43,4 +44,17 @@ data class HourlyDto(
     @SerialName("wind_direction_10m") val windDirection: List<Int?> = emptyList(),
     @SerialName("wind_gusts_10m") val windGusts: List<Double?> = emptyList(),
     @SerialName("is_day") val isDay: List<Int?> = emptyList(),
+)
+
+/** Denní agregace (dnešek + další dny); pravděpodobnost srážek nemusí model vracet. */
+@Serializable
+data class DailyDto(
+    val time: List<String>,
+    @SerialName("temperature_2m_max") val temperatureMax: List<Double?> = emptyList(),
+    @SerialName("temperature_2m_min") val temperatureMin: List<Double?> = emptyList(),
+    @SerialName("precipitation_sum") val precipitationSum: List<Double?> = emptyList(),
+    @SerialName("precipitation_probability_max") val precipitationProbabilityMax: List<Int?> = emptyList(),
+    @SerialName("wind_speed_10m_max") val windSpeedMax: List<Double?> = emptyList(),
+    @SerialName("wind_gusts_10m_max") val windGustsMax: List<Double?> = emptyList(),
+    @SerialName("wind_direction_10m_dominant") val windDirectionDominant: List<Int?> = emptyList(),
 )

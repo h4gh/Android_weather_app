@@ -50,6 +50,29 @@
     <string name="trend_falling">klesá</string>
     <string name="trend_steady">stálý</string>
 
+    <string name="outlook_title">Výhled na 5 dní</string>
+    <string name="outlook_subtitle">%1$s · vítr v km/h · ALADIN do 3 dnů, dále ECMWF</string>
+    <string name="outlook_tomorrow">Zítra</string>
+    <string name="outlook_less_certain">Obecnější předpověď (model ECMWF)</string>
+    <string name="outlook_precip_mm">%1$s mm</string>
+    <string name="outlook_probability">%1$d %%</string>
+    <string name="outlook_gusts">Nárazy až %1$d km/h</string>
+    <string name="outlook_humidity">Vlhkost %1$d %%</string>
+    <string name="outlook_pressure">%1$d hPa</string>
+    <string name="action_expand">Rozbalit</string>
+    <string name="action_collapse">Sbalit</string>
+    <string name="state_expanded">Rozbaleno</string>
+    <string name="state_collapsed">Sbaleno</string>
+    <string-array name="day_short">
+        <item>Po</item>
+        <item>Út</item>
+        <item>St</item>
+        <item>Čt</item>
+        <item>Pá</item>
+        <item>So</item>
+        <item>Ne</item>
+    </string-array>
+
     <string name="cond_clear">Jasno</string>
     <string name="cond_mostly_clear">Skoro jasno</string>
     <string name="cond_partly_cloudy">Polojasno</string>

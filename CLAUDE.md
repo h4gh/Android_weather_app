@@ -8,7 +8,8 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
 1. **Dnes** – aktuální stav (teplota, popis, pocitová, max/min, ikona), karta „Nejbližší srážky“
    (z radaru), meteogram „Dalších 24 hodin“ (teplota křivkou, srážky sloupci, vítr po 3 h)
    a tři malé karty Vítr / Vlhkost / Tlak.
-2. **Výhled** – výhled na 5 dní (rozbalitelný den s hodnotami po 3 h, srážky, vítr, rozpětí teplot).
+2. **Výhled** – výhled na 5 dní od zítřka (rozbalitelný den s hodnotami po 3 h a chipy nárazy/vlhkost/tlak,
+   srážky + pravděpodobnost, vítr, pruh min–max na společné stupnici; dny 4–5 označené jako ECMWF).
 3. **Radar** – mapa s radarovými kompozity ČHMÚ, animace posledních 2 h, nejbližší déšť.
 
 ## Technologie a architektura
@@ -21,15 +22,19 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
 - Grafy kreslit přes Compose `Canvas` – žádné grafové knihovny.
 - Ruční DI: `AppContainer` (vytváří `PocasiApp`), ViewModely přes `viewModelFactory`.
 - Vrstvy (balíček `cz.kisiala.pocasi`):
-  - `model/` – doménové třídy: `Place`, `Forecast` (+ `CurrentWeather`, `HourlyWeather`,
+  - `model/` – doménové třídy: `Place`, `Forecast` (+ `CurrentWeather`, `HourlyWeather`, `DailyWeather`,
     odvození `WeatherCondition` z oblačnosti a srážek, tendence tlaku).
   - `data/remote/` – `OpenMeteoApi` (Retrofit) a DTO; `data/WeatherRepository` mapuje DTO → doména.
   - `data/PlaceRepository` – zdroj pravdy o místech: `places` (aktuální poloha + uložená místa)
     a `selectedPlace`. **Oblíbená místa** se doplní nahrazením `savedPlaces` tokem z DataStore/Room;
     UI (rozbalovací menu v top app baru) už pracuje se seznamem `places`.
   - `data/location/LocationProvider` – poloha a reverzní geokódování.
-  - `ui/AppRoot` – Scaffold s Navigation Barem, žádost o oprávnění k poloze.
-  - `ui/today/` – `TodayScreen`, `TodayViewModel` (UiState: loading / data / error, pull-to-refresh),
+  - `ui/AppRoot` – Scaffold s Navigation Barem, žádost o oprávnění k poloze; vytváří jednu instanci
+    `ForecastViewModel`, kterou sdílí Dnes i Výhled (jeden dotaz na API).
+  - `ui/ForecastViewModel` – UiState: loading / data / error, pull-to-refresh, výběr místa.
+  - `ui/common/` – `LoadingState`, `ErrorState`, `PlacesMenu`, `ComingSoonScreen`.
+  - `ui/outlook/` – `OutlookScreen` (seznam dní, rozbalení jednoho dne, pruh teplot přes Canvas).
+  - `ui/today/` – `TodayScreen`,
     `Meteogram` (Canvas), `WeatherIcon` (Canvas ikony), `Format` (formátování, české popisky).
   - `ui/theme/` – `PocasiTheme`, barvy, vlastní barva `WeatherTheme.colors.temperature`.
 - Každá obrazovka má vlastní top app bar (vnořený `Scaffold`), vnější `Scaffold` řeší jen Navigation Bar.
@@ -48,9 +53,11 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
 ## Zdroje dat
 
 - **Předpověď:** Open-Meteo, model `chmi_aladin_seamless` (ALADIN cca 3 dny, dál dopočítává ECMWF).
-  `https://api.open-meteo.com/v1/forecast?latitude=..&longitude=..&models=chmi_aladin_seamless&timezone=auto&forecast_days=3`
+  `https://api.open-meteo.com/v1/forecast?latitude=..&longitude=..&models=chmi_aladin_seamless&timezone=auto&forecast_days=6`
   - `current` + `hourly`: temperature_2m, apparent_temperature, relative_humidity_2m, dew_point_2m,
     precipitation, cloud_cover, pressure_msl, wind_speed_10m, wind_direction_10m, wind_gusts_10m, is_day
+  - `daily`: temperature_2m_max/min, precipitation_sum, precipitation_probability_max (může chybět → % se
+    nezobrazí), wind_speed_10m_max, wind_gusts_10m_max, wind_direction_10m_dominant
   - jednotky °C, km/h, mm, hPa; dokumentace https://open-meteo.com/en/docs/chmi-api
   - ALADIN nedává symbol počasí → ikona/popis se odvozuje z `cloud_cover` a `precipitation`.
   - Zdarma pro nekomerční použití, bez API klíče. Atribuce v menu „O aplikaci“.
@@ -62,16 +69,19 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
 ## Plán kroků
 
 1. **Dnes** – kostra aplikace + obrazovka Dnes ✅ hotovo
-2. **Výhled na 5 dní** (`forecast_days` zvýšit, přidat denní agregace)
+2. **Výhled na 5 dní** ✅ hotovo
 3. **Radar** s animací posledních 2 h (+ naplnit kartu „Nejbližší srážky“ na obrazovce Dnes)
 4. Později: oblíbená místa (vyhledávání + uložení, přepínání v top app baru) a widget
 
 ## Stav
 
 Hotovo:
-- Kostra: Navigation Bar (Dnes / Výhled / Radar), Výhled a Radar zatím „Připravujeme“.
+- Kostra: Navigation Bar (Dnes / Výhled / Radar), Radar zatím „Připravujeme“.
 - Obrazovka Dnes kompletně dle návrhu, načítání, chybový stav se „Zkusit znovu“, pull-to-refresh,
   snackbar při chybě obnovy nad zobrazenými daty.
+- Obrazovka Výhled dle návrhu: 5 dní od zítřka, zítřek rozbalený, rozbalený den ve vlastní kartě,
+  dny 4–5 pod nadpisem „Obecnější předpověď (model ECMWF)“. Ikona dne z průměrné denní oblačnosti
+  (7–20 h), déšť až od 1 mm za den. Ikona místa v top app baru otevírá stejné menu míst jako Dnes.
 - Poloha z GPS/sítě s fallbackem na Prahu, reverzní geokódování, menu míst v top app baru.
 - Menu „Další možnosti“ → „O aplikaci“ s atribucí dat.
 

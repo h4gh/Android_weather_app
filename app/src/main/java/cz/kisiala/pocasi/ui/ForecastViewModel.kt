@@ -1,4 +1,4 @@
-package cz.kisiala.pocasi.ui.today
+package cz.kisiala.pocasi.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -22,7 +22,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-data class TodayUiState(
+/**
+ * Stav předpovědi pro vybrané místo – sdílený obrazovkami Dnes a Výhled
+ * (jedna instance ViewModelu v [AppRoot] = jeden dotaz na API).
+ */
+data class ForecastUiState(
     val place: Place? = null,
     val places: List<Place> = emptyList(),
     val forecast: Forecast? = null,
@@ -35,13 +39,13 @@ data class TodayUiState(
 
 enum class LoadError { Network, Other }
 
-class TodayViewModel(
+class ForecastViewModel(
     private val placeRepository: PlaceRepository,
     private val weatherRepository: WeatherRepository,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(TodayUiState())
-    val state: StateFlow<TodayUiState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(ForecastUiState())
+    val state: StateFlow<ForecastUiState> = _state.asStateFlow()
 
     /** Každá změna spustí nové načtení pro aktuální místo. */
     private val reloadTick = MutableStateFlow(0)
@@ -107,7 +111,7 @@ class TodayViewModel(
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PocasiApp
-                TodayViewModel(app.container.placeRepository, app.container.weatherRepository)
+                ForecastViewModel(app.container.placeRepository, app.container.weatherRepository)
             }
         }
     }

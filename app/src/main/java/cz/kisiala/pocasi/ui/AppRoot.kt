@@ -25,9 +25,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cz.kisiala.pocasi.AppContainer
 import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.ui.common.ComingSoonScreen
+import cz.kisiala.pocasi.ui.outlook.OutlookScreen
 import cz.kisiala.pocasi.ui.today.TodayScreen
 import kotlinx.coroutines.launch
 
@@ -40,6 +42,8 @@ enum class AppTab(@StringRes val label: Int, val icon: ImageVector) {
 @Composable
 fun AppRoot(container: AppContainer) {
     var tab by rememberSaveable { mutableStateOf(AppTab.Today) }
+    // Jedna instance pro Dnes i Výhled – sdílí stav i jediný dotaz na předpověď.
+    val forecastViewModel: ForecastViewModel = viewModel(factory = ForecastViewModel.Factory)
     LocationPermissionEffect(container)
 
     Scaffold(
@@ -69,8 +73,10 @@ fun AppRoot(container: AppContainer) {
             AppTab.Today -> TodayScreen(
                 onOpenRadar = { tab = AppTab.Radar },
                 modifier = modifier,
+                viewModel = forecastViewModel,
             )
-            AppTab.Outlook, AppTab.Radar -> ComingSoonScreen(tab = tab, modifier = modifier)
+            AppTab.Outlook -> OutlookScreen(viewModel = forecastViewModel, modifier = modifier)
+            AppTab.Radar -> ComingSoonScreen(tab = tab, modifier = modifier)
         }
     }
 }
