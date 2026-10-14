@@ -9,3 +9,6 @@
 /captures/
 .externalNativeBuild/
 .cxx/
+
+# Hesla k release podpisu
+/keystore.properties

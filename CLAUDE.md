@@ -112,4 +112,7 @@ Zbývá / známá omezení:
 
 - `gradlew.bat assembleDebug` → `app/build/outputs/apk/debug/app-debug.apk`
 - `gradlew.bat installDebug` nainstaluje do připojeného zařízení (USB ladění).
-- Release build (`assembleRelease`) je s R8 a podepsaný debug klíčem – jen pro osobní použití.
+- Release build (`assembleRelease`) je s R8 a podepsaný vlastním klíčem `C:/Users/ondre/keys/pocasi-release.jks`
+  (alias `pocasi`). Cesta a hesla jsou v `keystore.properties` v kořeni projektu – **není v gitu**.
+  Bez tohoto souboru vznikne nepodepsané APK. Debug build dál používá debug klíč – release a debug
+  nejdou nainstalovat přes sebe (jiný podpis), je nutné nejdřív odinstalovat.
