@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.sync.Mutex
@@ -38,6 +39,9 @@ class PlaceRepository(
         combine(places, selectedId, locationResolved) { list, id, resolved ->
             if (!resolved && id == null) null else list.firstOrNull { it.id == id } ?: list.first()
         }.stateIn(scope, SharingStarted.Eagerly, null)
+
+    /** Poloha zařízení (je-li známa) – pro tečku „Moje poloha“ na mapě radaru. */
+    val currentLocation: StateFlow<Place?> = currentLocationPlace.asStateFlow()
 
     val isLocationResolved: Boolean get() = locationResolved.value
 

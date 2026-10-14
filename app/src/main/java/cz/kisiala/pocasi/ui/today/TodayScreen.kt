@@ -23,10 +23,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.Radar
+import androidx.compose.material.icons.outlined.Umbrella
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -63,12 +68,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cz.kisiala.pocasi.BuildConfig
 import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.model.Forecast
+import cz.kisiala.pocasi.model.NearbyPrecipitation
 import cz.kisiala.pocasi.model.Place
 import cz.kisiala.pocasi.ui.ForecastViewModel
 import cz.kisiala.pocasi.ui.common.ErrorState
 import cz.kisiala.pocasi.ui.common.LoadingState
 import cz.kisiala.pocasi.ui.common.PlacesMenu
 import cz.kisiala.pocasi.ui.common.message
+import cz.kisiala.pocasi.ui.radar.RadarUiState
+import cz.kisiala.pocasi.ui.radar.RadarViewModel
+import cz.kisiala.pocasi.ui.radar.arrowRotation
+import cz.kisiala.pocasi.ui.radar.directionAdverb
+import cz.kisiala.pocasi.ui.radar.formatRadarTime
+import cz.kisiala.pocasi.ui.radar.label
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -78,8 +90,10 @@ fun TodayScreen(
     onOpenRadar: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ForecastViewModel = viewModel(factory = ForecastViewModel.Factory),
+    radarViewModel: RadarViewModel = viewModel(factory = RadarViewModel.Factory),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val radarState by radarViewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showAbout by rememberSaveable { mutableStateOf(false) }
@@ -117,10 +131,13 @@ fun TodayScreen(
             when {
                 forecast != null -> PullToRefreshBox(
                     isRefreshing = state.isRefreshing,
-                    onRefresh = viewModel::refresh,
+                    onRefresh = {
+                        viewModel.refresh()
+                        radarViewModel.refreshIfStale()
+                    },
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    TodayContent(forecast, onOpenRadar)
+                    TodayContent(forecast, radarState, onOpenRadar)
                 }
                 state.error != null && !state.isLoading -> ErrorState(state.error!!, onRetry = viewModel::retry)
                 else -> LoadingState()
@@ -200,7 +217,7 @@ private fun TodayTopBar(
 }
 
 @Composable
-private fun TodayContent(forecast: Forecast, onOpenRadar: () -> Unit) {
+private fun TodayContent(forecast: Forecast, radar: RadarUiState, onOpenRadar: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -210,7 +227,7 @@ private fun TodayContent(forecast: Forecast, onOpenRadar: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CurrentConditions(forecast)
-        NearestPrecipitationCard(onOpenRadar)
+        NearestPrecipitationCard(radar, onOpenRadar)
         Next24HoursCard(forecast.next(24))
         DetailCards(forecast)
     }
@@ -260,9 +277,42 @@ private fun CurrentConditions(forecast: Forecast) {
     }
 }
 
-/** Placeholder – skutečná data z radaru ČHMÚ přibudou v kroku 3. */
+/** Nejbližší srážky z posledního snímku radaru ČHMÚ (do 100 km od místa). */
 @Composable
-private fun NearestPrecipitationCard(onOpenRadar: () -> Unit) {
+private fun NearestPrecipitationCard(radar: RadarUiState, onOpenRadar: () -> Unit) {
+    val latest = radar.latest
+    val nearby = radar.nearby
+    val time = latest?.let { formatRadarTime(it.time) }
+    val title: String
+    val detail: String
+    when {
+        latest != null && nearby is NearbyPrecipitation.Found -> {
+            title = if (nearby.distanceKm == 0) {
+                stringResource(R.string.precip_here)
+            } else {
+                stringResource(R.string.precip_found, nearby.distanceKm, directionAdverb(nearby.bearing))
+            }
+            detail = stringResource(R.string.precip_detail, time!!, stringResource(nearby.intensity.label))
+        }
+        latest != null && nearby == NearbyPrecipitation.None -> {
+            title = stringResource(R.string.precip_none)
+            detail = stringResource(
+                R.string.precip_none_detail, time!!, NearbyPrecipitation.SEARCH_RADIUS_KM.toInt(),
+            )
+        }
+        latest != null && nearby == NearbyPrecipitation.OutOfCoverage -> {
+            title = stringResource(R.string.precip_out_of_coverage)
+            detail = stringResource(R.string.precip_out_of_coverage_detail)
+        }
+        radar.error != null && !radar.isLoading -> {
+            title = stringResource(R.string.precip_title)
+            detail = stringResource(R.string.precip_error)
+        }
+        else -> {
+            title = stringResource(R.string.precip_title)
+            detail = stringResource(R.string.precip_loading)
+        }
+    }
     WeatherCard {
         Row(
             modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = 8.dp),
@@ -275,20 +325,29 @@ private fun NearestPrecipitationCard(onOpenRadar: () -> Unit) {
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
+                val tint = MaterialTheme.colorScheme.onPrimaryContainer
+                when {
+                    latest == null && radar.error == null ->
+                        CircularProgressIndicator(Modifier.size(20.dp), color = tint, strokeWidth = 2.dp)
+                    nearby is NearbyPrecipitation.Found && nearby.distanceKm > 0 -> Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.rotate(arrowRotation(nearby.bearing)),
+                    )
+                    nearby is NearbyPrecipitation.Found -> Icon(Icons.Outlined.Umbrella, null, tint = tint)
+                    latest == null -> Icon(Icons.Outlined.CloudOff, null, tint = tint)
+                    else -> Icon(Icons.Outlined.Radar, null, tint = tint)
+                }
             }
             Column(
                 Modifier
                     .weight(1f)
                     .padding(horizontal = 16.dp),
             ) {
-                Text(stringResource(R.string.precip_title), style = MaterialTheme.typography.titleMedium)
+                Text(title, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    stringResource(R.string.precip_placeholder),
+                    detail,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

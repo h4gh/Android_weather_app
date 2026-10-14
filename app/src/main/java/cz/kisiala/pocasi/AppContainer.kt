@@ -4,6 +4,7 @@ import android.content.Context
 import cz.kisiala.pocasi.data.PlaceRepository
 import cz.kisiala.pocasi.data.WeatherRepository
 import cz.kisiala.pocasi.data.location.LocationProvider
+import cz.kisiala.pocasi.data.radar.RadarRepository
 import cz.kisiala.pocasi.data.remote.OpenMeteoApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,6 +39,8 @@ class AppContainer(context: Context) {
     val locationProvider = LocationProvider(context)
 
     val weatherRepository = WeatherRepository(openMeteoApi)
+
+    val radarRepository = RadarRepository(okHttp)
 
     val placeRepository = PlaceRepository(
         locationProvider = locationProvider,

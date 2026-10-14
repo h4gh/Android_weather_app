@@ -4,6 +4,7 @@ import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -25,11 +26,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cz.kisiala.pocasi.AppContainer
 import cz.kisiala.pocasi.R
-import cz.kisiala.pocasi.ui.common.ComingSoonScreen
 import cz.kisiala.pocasi.ui.outlook.OutlookScreen
+import cz.kisiala.pocasi.ui.radar.RadarScreen
+import cz.kisiala.pocasi.ui.radar.RadarViewModel
 import cz.kisiala.pocasi.ui.today.TodayScreen
 import kotlinx.coroutines.launch
 
@@ -44,6 +47,12 @@ fun AppRoot(container: AppContainer) {
     var tab by rememberSaveable { mutableStateOf(AppTab.Today) }
     // Jedna instance pro Dnes i Výhled – sdílí stav i jediný dotaz na předpověď.
     val forecastViewModel: ForecastViewModel = viewModel(factory = ForecastViewModel.Factory)
+    // Radar sdílí Dnes (karta „Nejbližší srážky“) i Radar – snímky se stahují jen jednou.
+    val radarViewModel: RadarViewModel = viewModel(factory = RadarViewModel.Factory)
+    LifecycleStartEffect(radarViewModel) {
+        radarViewModel.refreshIfStale()
+        onStopOrDispose {}
+    }
     LocationPermissionEffect(container)
 
     Scaffold(
@@ -74,9 +83,19 @@ fun AppRoot(container: AppContainer) {
                 onOpenRadar = { tab = AppTab.Radar },
                 modifier = modifier,
                 viewModel = forecastViewModel,
+                radarViewModel = radarViewModel,
             )
             AppTab.Outlook -> OutlookScreen(viewModel = forecastViewModel, modifier = modifier)
-            AppTab.Radar -> ComingSoonScreen(tab = tab, modifier = modifier)
+            // Mapa je celoobrazovková – pod stavovým řádkem, odsazená jen od Navigation Baru.
+            AppTab.Radar -> {
+                val bottom = PaddingValues(bottom = innerPadding.calculateBottomPadding())
+                RadarScreen(
+                    viewModel = radarViewModel,
+                    modifier = Modifier
+                        .padding(bottom)
+                        .consumeWindowInsets(bottom),
+                )
+            }
         }
     }
 }

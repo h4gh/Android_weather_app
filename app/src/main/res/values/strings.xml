@@ -5,7 +5,6 @@
     <string name="tab_today">Dnes</string>
     <string name="tab_outlook">Výhled</string>
     <string name="tab_radar">Radar</string>
-    <string name="coming_soon">Připravujeme</string>
 
     <string name="action_search">Hledat</string>
     <string name="action_more">Další možnosti</string>
@@ -14,7 +13,7 @@
     <string name="action_map">Mapa</string>
     <string name="action_close">Zavřít</string>
     <string name="menu_about">O aplikaci</string>
-    <string name="about_text">Data: ČHMÚ (model ALADIN) přes Open-Meteo</string>
+    <string name="about_text">Předpověď: ČHMÚ (model ALADIN) přes Open-Meteo\nRadar: ČHMÚ (opendata.chmi.cz)\nMapa: OpenFreeMap, © OpenStreetMap</string>
     <string name="about_version">Verze %1$s</string>
     <string name="search_coming_soon">Vyhledávání míst připravujeme</string>
     <string name="favorites_coming_soon">Oblíbená místa připravujeme</string>
@@ -30,7 +29,46 @@
     <string name="feels_like_line">Pocitově %1$s · max %2$s · min %3$s</string>
 
     <string name="precip_title">Nejbližší srážky</string>
-    <string name="precip_placeholder">Radar ČHMÚ připravujeme</string>
+    <string name="precip_found">Srážky %1$d km %2$s</string>
+    <string name="precip_here">Srážky přímo v místě</string>
+    <string name="precip_none">V okolí neprší</string>
+    <string name="precip_out_of_coverage">Mimo dosah radaru</string>
+    <string name="precip_detail">Radar ČHMÚ %1$s · %2$s</string>
+    <string name="precip_none_detail">Radar ČHMÚ %1$s · do %2$d km</string>
+    <string name="precip_out_of_coverage_detail">Radar ČHMÚ pokrývá jen Česko a okolí</string>
+    <string name="precip_loading">Načítám radar…</string>
+    <string name="precip_error">Radar se nepodařilo načíst</string>
+    <string name="intensity_light">slabý déšť</string>
+    <string name="intensity_moderate">mírný déšť</string>
+    <string name="intensity_heavy">silný déšť</string>
+    <string name="intensity_torrential">přívalový déšť</string>
+    <string-array name="direction_adverb">
+        <item>severně</item>
+        <item>severovýchodně</item>
+        <item>východně</item>
+        <item>jihovýchodně</item>
+        <item>jižně</item>
+        <item>jihozápadně</item>
+        <item>západně</item>
+        <item>severozápadně</item>
+    </string-array>
+
+    <string name="radar_title">Radar srážek</string>
+    <string name="radar_title_time">Radar srážek · %1$s</string>
+    <string name="radar_nearest_rain">Nejbližší déšť %1$d km %2$s</string>
+    <string name="radar_rain_here">Prší přímo v místě</string>
+    <string name="action_layers">Vrstvy</string>
+    <string name="layers_translucent">Průhledný radar</string>
+    <string name="action_my_location">Moje poloha</string>
+    <string name="action_play">Přehrát</string>
+    <string name="action_pause">Pozastavit</string>
+    <string name="radar_time_slider">Čas snímku</string>
+    <string name="radar_minus_2h">−2 h</string>
+    <string name="radar_minus_1h">−1 h</string>
+    <string name="radar_now">Teď %1$s</string>
+    <string name="legend_light">Slabé</string>
+    <string name="legend_torrential">Přívalové</string>
+    <string name="location_unavailable">Poloha není k dispozici</string>
 
     <string name="next24_title">Dalších 24 hodin</string>
     <string name="legend_temperature">Teplota</string>

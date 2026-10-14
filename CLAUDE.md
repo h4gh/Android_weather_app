@@ -32,7 +32,12 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
   - `ui/AppRoot` – Scaffold s Navigation Barem, žádost o oprávnění k poloze; vytváří jednu instanci
     `ForecastViewModel`, kterou sdílí Dnes i Výhled (jeden dotaz na API).
   - `ui/ForecastViewModel` – UiState: loading / data / error, pull-to-refresh, výběr místa.
-  - `ui/common/` – `LoadingState`, `ErrorState`, `PlacesMenu`, `ComingSoonScreen`.
+  - `ui/common/` – `LoadingState`, `ErrorState`, `PlacesMenu`.
+  - `model/Radar` – geometrie kompozitu (`RadarGrid`, ořez na datovou oblast), škála ČHMÚ (`RadarScale`),
+    hledání nejbližších srážek (`NearbyPrecipitation.find`, okolí 100 km, odfiltrování osamocených pixelů).
+  - `data/radar/RadarRepository` – stahování a dekódování PNG (OkHttp), cache snímků v paměti.
+  - `ui/radar/` – `RadarViewModel` (sdílený Dnes i Radarem, vytváří `AppRoot`; nejnovější snímek hned,
+    animace až při otevření Radaru, obnova po 4 min), `RadarScreen`, `RadarMap` (MapLibre přes `AndroidView`).
   - `ui/outlook/` – `OutlookScreen` (seznam dní, rozbalení jednoho dne, pruh teplot přes Canvas).
   - `ui/today/` – `TodayScreen`,
     `Meteogram` (Canvas), `WeatherIcon` (Canvas ikony), `Format` (formátování, české popisky).
@@ -61,22 +66,30 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
   - jednotky °C, km/h, mm, hPa; dokumentace https://open-meteo.com/en/docs/chmi-api
   - ALADIN nedává symbol počasí → ikona/popis se odvozuje z `cloud_cover` a `precipitation`.
   - Zdarma pro nekomerční použití, bez API klíče. Atribuce v menu „O aplikaci“.
-- **Radar (krok 3):** hotové PNG kompozity ČHMÚ
+- **Radar:** hotové PNG kompozity ČHMÚ
   https://opendata.chmi.cz/meteorology/weather/radar/composite/maxz/png_masked/
   (Mercator EPSG:3857, každých 5 min, popis:
   https://opendata.chmi.cz/meteorology/weather/radar/radar_description_en.pdf)
+  - soubory `pacz2gmaps3.z_max3d.YYYYMMDD.hhmm.0.png` (čas UTC), 680 × 460 px s paletou; nejnovější se hledá
+    od teď zpět po 5 min. Data jen v oblasti E 11,267–19,624°, N 48,047–51,458° – pravý a horní pruh
+    jsou boční průměty, proto se ořezávají. Černá (rámečky, popisek) a šedá C4C4C4 (mimo dosah) → průhledné.
+  - sytě vykreslené barvy = srážky dopadající na zem; přesně odpovídají škále
+    `https://opendata.chmi.cz/meteorology/weather/radar/scl/scl-dbz-mmh.png` (15 barev po 4 dBZ),
+    světlejší barvy = odraz ve výšce (zobrazují se poloprůhledně, do nejbližšího deště se nepočítají).
+- **Mapa:** MapLibre Android, styly OpenFreeMap `positron` (světlý) a `dark` (tmavý), bez API klíče;
+  popisky přepnuté na `name:cs`. Atribuce OSM v mapě a v „O aplikaci“.
 
 ## Plán kroků
 
 1. **Dnes** – kostra aplikace + obrazovka Dnes ✅ hotovo
 2. **Výhled na 5 dní** ✅ hotovo
-3. **Radar** s animací posledních 2 h (+ naplnit kartu „Nejbližší srážky“ na obrazovce Dnes)
-4. Později: oblíbená místa (vyhledávání + uložení, přepínání v top app baru) a widget
+3. **Radar** s animací posledních 2 h + karta „Nejbližší srážky“ na obrazovce Dnes ✅ hotovo
+4. **Dál:** oblíbená místa (vyhledávání + uložení, přepínání v top app baru) a widget
 
 ## Stav
 
 Hotovo:
-- Kostra: Navigation Bar (Dnes / Výhled / Radar), Radar zatím „Připravujeme“.
+- Kostra: Navigation Bar (Dnes / Výhled / Radar).
 - Obrazovka Dnes kompletně dle návrhu, načítání, chybový stav se „Zkusit znovu“, pull-to-refresh,
   snackbar při chybě obnovy nad zobrazenými daty.
 - Obrazovka Výhled dle návrhu: 5 dní od zítřka, zítřek rozbalený, rozbalený den ve vlastní kartě,
@@ -84,11 +97,15 @@ Hotovo:
   (7–20 h), déšť až od 1 mm za den. Ikona místa v top app baru otevírá stejné menu míst jako Dnes.
 - Poloha z GPS/sítě s fallbackem na Prahu, reverzní geokódování, menu míst v top app baru.
 - Menu „Další možnosti“ → „O aplikaci“ s atribucí dat.
+- Obrazovka Radar: celoobrazovková mapa, plovoucí lišta s časem zobrazeného snímku a menu Vrstvy
+  (přepínač průhledného radaru), chip s nejbližším deštěm, FAB „Moje poloha“ (modrá tečka),
+  spodní panel s přehráváním 13 snímků po 10 min, posuvníkem a legendou škály ČHMÚ.
+- Karta „Nejbližší srážky“ na Dnes: vzdálenost, směr (šipka míří ke srážkám) a intenzita pro vybrané
+  místo; tlačítko „Mapa“ přepne na Radar.
 
 Zbývá / známá omezení:
-- Karta „Nejbližší srážky“ je placeholder (tlačítko „Mapa“ přepne na záložku Radar).
 - Tlačítko Hledat ukazuje jen snackbar „připravujeme“.
-- Data se necachují (každé spuštění = nový požadavek); poloha se zjišťuje při startu a při pull-to-refresh.
+- Předpověď se necachuje (každé spuštění = nový požadavek), radarové snímky jen v paměti; poloha se zjišťuje při startu a při pull-to-refresh.
 - Žádné testy zatím nejsou.
 
 ## Sestavení
