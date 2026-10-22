@@ -5,6 +5,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -20,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -44,7 +47,12 @@ enum class AppTab(@StringRes val label: Int, val icon: ImageVector) {
 
 @Composable
 fun AppRoot(container: AppContainer) {
-    var tab by rememberSaveable { mutableStateOf(AppTab.Today) }
+    // Obrazovky v HorizontalPageru – swipe i spodní lišta mění stránku.
+    val pagerState = rememberPagerState { AppTab.entries.size }
+    val scope = rememberCoroutineScope()
+    fun open(tab: AppTab) {
+        scope.launch { pagerState.animateScrollToPage(tab.ordinal) }
+    }
     // Jedna instance pro Dnes i Výhled – sdílí stav i jediný dotaz na předpověď.
     val forecastViewModel: ForecastViewModel = viewModel(factory = ForecastViewModel.Factory)
     // Radar sdílí Dnes (karta „Nejbližší srážky“) i Radar – snímky se stahují jen jednou.
@@ -59,10 +67,10 @@ fun AppRoot(container: AppContainer) {
         bottomBar = {
             NavigationBar {
                 AppTab.entries.forEach { item ->
-                    val selected = item == tab
+                    val selected = item.ordinal == pagerState.targetPage
                     NavigationBarItem(
                         selected = selected,
-                        onClick = { tab = item },
+                        onClick = { open(item) },
                         icon = { Icon(item.icon, contentDescription = null) },
                         label = {
                             Text(
@@ -75,27 +83,52 @@ fun AppRoot(container: AppContainer) {
             }
         },
     ) { innerPadding ->
-        val modifier = Modifier
-            .padding(innerPadding)
-            .consumeWindowInsets(innerPadding)
-        when (tab) {
-            AppTab.Today -> TodayScreen(
-                onOpenRadar = { tab = AppTab.Radar },
-                modifier = modifier,
-                viewModel = forecastViewModel,
+        HorizontalPager(
+            state = pagerState,
+            // Na Radaru patří gesta mapě – odtud se odchází jen spodní lištou. settledPage (ne currentPage),
+            // aby se swipe na Radar nepřerušil uprostřed gesta.
+            userScrollEnabled = pagerState.settledPage != AppTab.Radar.ordinal,
+            key = { AppTab.entries[it] },
+        ) { page ->
+            AppPage(
+                tab = AppTab.entries[page],
+                innerPadding = innerPadding,
+                forecastViewModel = forecastViewModel,
                 radarViewModel = radarViewModel,
+                onOpenRadar = { open(AppTab.Radar) },
             )
-            AppTab.Outlook -> OutlookScreen(viewModel = forecastViewModel, modifier = modifier)
-            // Mapa je celoobrazovková – pod stavovým řádkem, odsazená jen od Navigation Baru.
-            AppTab.Radar -> {
-                val bottom = PaddingValues(bottom = innerPadding.calculateBottomPadding())
-                RadarScreen(
-                    viewModel = radarViewModel,
-                    modifier = Modifier
-                        .padding(bottom)
-                        .consumeWindowInsets(bottom),
-                )
-            }
+        }
+    }
+}
+
+@Composable
+private fun AppPage(
+    tab: AppTab,
+    innerPadding: PaddingValues,
+    forecastViewModel: ForecastViewModel,
+    radarViewModel: RadarViewModel,
+    onOpenRadar: () -> Unit,
+) {
+    val modifier = Modifier
+        .padding(innerPadding)
+        .consumeWindowInsets(innerPadding)
+    when (tab) {
+        AppTab.Today -> TodayScreen(
+            onOpenRadar = onOpenRadar,
+            modifier = modifier,
+            viewModel = forecastViewModel,
+            radarViewModel = radarViewModel,
+        )
+        AppTab.Outlook -> OutlookScreen(viewModel = forecastViewModel, modifier = modifier)
+        // Mapa je celoobrazovková – pod stavovým řádkem, odsazená jen od Navigation Baru.
+        AppTab.Radar -> {
+            val bottom = PaddingValues(bottom = innerPadding.calculateBottomPadding())
+            RadarScreen(
+                viewModel = radarViewModel,
+                modifier = Modifier
+                    .padding(bottom)
+                    .consumeWindowInsets(bottom),
+            )
         }
     }
 }
