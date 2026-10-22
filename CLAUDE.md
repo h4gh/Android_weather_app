@@ -19,7 +19,9 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
 - Síť: Retrofit + kotlinx.serialization (OkHttp).
 - Poloha: systémový `LocationManager` přes `LocationManagerCompat` (bez Play Services),
   název místa přes `Geocoder` (při selhání „Moje poloha“). Bez polohy → záložní místo Frýdek-Místek.
-- Grafy kreslit přes Compose `Canvas` – žádné grafové knihovny.
+- Grafy kreslit přes Compose `Canvas` – žádné grafové knihovny. Kreslení ikon a meteogramu je v `DrawScope`
+  funkcích (`drawWeatherIcon`, `drawMeteogram`), které sdílí aplikace i widgety (ty je kreslí do bitmapy).
+- Widgety: Jetpack Glance (+ WorkManager); obnova `updatePeriodMillis` 30 min.
 - Ruční DI: `AppContainer` (vytváří `PocasiApp`), ViewModely přes `viewModelFactory`.
 - Vrstvy (balíček `cz.kisiala.pocasi`):
   - `model/` – doménové třídy: `Place`, `Forecast` (+ `CurrentWeather`, `HourlyWeather`, `DailyWeather`,
@@ -49,7 +51,13 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
     `Meteogram` průběhu dne ze `ui/today`, pruh teplot přes Canvas).
   - `ui/today/` – `TodayScreen`,
     `Meteogram` (Canvas), `WeatherIcon` (Canvas ikony), `Format` (formátování, české popisky).
-  - `ui/theme/` – `PocasiTheme`, barvy, vlastní barva `WeatherTheme.colors.temperature`.
+  - `ui/theme/` – `PocasiTheme`, barvy, vlastní barva `WeatherTheme.colors.temperature`; `appColorScheme()`
+    a `weatherColors()` používá i widget.
+  - `widget/` – `WeatherWidget` (Exact velikost: kompaktní / úzký s meteogramem / široký / široký s meteogramem),
+    `OutlookWidget` (5 dní), `WidgetConfigActivity` (výběr místa při přidání, přenastavitelné),
+    `WidgetUpdater` + `WidgetState` (místo a poslední data v Glance stavu, obnova jen když jsou data starší
+    než 25 min), `WidgetDrawing` (bitmapy ze sdíleného kreslení). „Moje poloha“ = poslední poloha z aplikace
+    (`PlaceStore.lastLocation`); `AppContainer` po nové poloze obnoví widgety s polohou, po změně vzhledu je překreslí.
 - Každá obrazovka má vlastní top app bar (vnořený `Scaffold`), vnější `Scaffold` řeší jen Navigation Bar.
 
 ## Pravidla designu
@@ -105,7 +113,12 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
       pro vybrané místo. Záložní místo bez polohy: Frýdek-Místek (místo Prahy), v menu jen když chybí poloha.
    2. ✅ Oblíbená místa v DataStore: ☆ ve výsledcích hledání a u názvu místa na Dnes; menu míst = Moje poloha,
       oblíbená, „Přidat místo…“, „Upravit oblíbená“ (odebrání, pořadí tažením); pamatuje si vybrané místo.
-6. **Dál:** widget
+6. ✅ **Widgety** (Jetpack Glance) – dva kroky, po každém build + instalace release, potvrzení, commit:
+   1. Widget „Počasí“ přepínaný podle velikosti: 2×2 kompaktní (místo, teplota, ikona, popis, max/min),
+      od 4×2 navíc meteogram na 24 h. Ikony a meteogram se kreslí stejným kódem jako v aplikaci (DrawScope do
+      bitmapy). Místo se volí při přidání widgetu (Moje poloha / oblíbené / hledat), obnova po 30 min,
+      klepnutí otevře aplikaci na Dnes.
+   2. Widget „Výhled na 5 dní“ (4×2): krátce aktuální stav + 5 dní (den, ikona, max/min, srážky), stejná volba místa.
 
 ## Stav
 
@@ -128,6 +141,9 @@ Hotovo:
   místo; tlačítko „Mapa“ přepne na Radar.
 
 Zbývá / známá omezení:
+- Widget s „Moje poloha“ ukazuje poslední polohu zjištěnou v aplikaci (bez oprávnění „Povolit vždy“).
+- Widget přebírá světlý/tmavý vzhled při vykreslení – po přepnutí systému se srovná při další obnově.
+- R8: pravidla pro WorkManager/Room v `app/proguard-rules.pro` (bez nich release padá / widgety se nenačtou).
 - Předpověď se necachuje (každé spuštění = nový požadavek), radarové snímky jen v paměti; poloha se zjišťuje při startu a při pull-to-refresh.
 - Žádné testy zatím nejsou.
 

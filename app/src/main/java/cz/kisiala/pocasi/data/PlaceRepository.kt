@@ -3,6 +3,7 @@ package cz.kisiala.pocasi.data
 import cz.kisiala.pocasi.data.location.LocationProvider
 import cz.kisiala.pocasi.model.Place
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -74,6 +75,9 @@ class PlaceRepository(
             }
         }.stateIn(scope, SharingStarted.Eagerly, null)
 
+    /** Poslední uložená poloha zařízení (přežije restart) – zdroj pro widgety s „Moje poloha“. */
+    val lastLocation: Flow<Place?> = store.lastLocation
+
     /** Poloha zařízení (je-li známa) – pro tečku „Moje poloha“ na mapě radaru. */
     val currentLocation: StateFlow<Place?> = currentLocationPlace.asStateFlow()
 
@@ -141,5 +145,7 @@ class PlaceRepository(
         locationResolved.value = true
         val name = runCatching { locationProvider.placeName(location.latitude, location.longitude) }.getOrNull()
         currentLocationPlace.value = currentLocationPlace.value?.copy(name = name ?: myLocationLabel)
+        // Pro widgety s „Moje poloha“ – ty polohu na pozadí nezjišťují (bez oprávnění „Povolit vždy“).
+        currentLocationPlace.value?.let { store.setLastLocation(it) }
     }
 }

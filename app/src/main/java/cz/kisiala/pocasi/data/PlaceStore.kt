@@ -24,6 +24,11 @@ class PlaceStore(context: Context) {
             .map { it.toPlace(Place.Kind.Saved) }
     }
 
+    /** Poslední zjištěná poloha zařízení (s názvem) – widget s „Moje poloha“ nesmí polohu zjišťovat na pozadí. */
+    val lastLocation: Flow<Place?> = dataStore.data.map { prefs ->
+        prefs[LAST_LOCATION]?.let(::decodePlace)?.copy(kind = Place.Kind.CurrentLocation)
+    }
+
     /** Naposledy vybrané místo (i hledané, které není v oblíbených); `null` = zatím nic. */
     val lastSelected: Flow<Place?> = dataStore.data.map { prefs ->
         prefs[LAST_SELECTED]?.let { decode { json.decodeFromString(StoredPlace.serializer(), it) } }
@@ -32,6 +37,10 @@ class PlaceStore(context: Context) {
 
     suspend fun setFavorites(places: List<Place>) {
         dataStore.edit { it[FAVORITES] = json.encodeToString(listSerializer, places.map(::StoredPlace)) }
+    }
+
+    suspend fun setLastLocation(place: Place) {
+        dataStore.edit { it[LAST_LOCATION] = encodePlace(place) }
     }
 
     suspend fun setLastSelected(place: Place) {
@@ -46,6 +55,7 @@ class PlaceStore(context: Context) {
     private companion object {
         val FAVORITES = stringPreferencesKey("favorites")
         val LAST_SELECTED = stringPreferencesKey("last_selected")
+        val LAST_LOCATION = stringPreferencesKey("last_location")
     }
 }
 
@@ -62,3 +72,13 @@ private data class StoredPlace(
 
     fun toPlace(kind: Place.Kind) = Place(id, name, latitude, longitude, kind, region)
 }
+
+private val placeJson = Json { ignoreUnknownKeys = true }
+
+/** Místo jako JSON (i s druhem) – pro uložení mimo [PlaceStore], např. ve stavu widgetu. */
+fun encodePlace(place: Place): String = placeJson.encodeToString(StoredPlace.serializer(), StoredPlace(place))
+
+fun decodePlace(json: String): Place? = runCatching {
+    val stored = placeJson.decodeFromString(StoredPlace.serializer(), json)
+    stored.toPlace(Place.Kind.entries.firstOrNull { it.name == stored.kind } ?: Place.Kind.Search)
+}.getOrNull()

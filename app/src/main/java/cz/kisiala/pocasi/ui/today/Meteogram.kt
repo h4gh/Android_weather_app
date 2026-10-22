@@ -31,9 +31,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -115,89 +118,114 @@ fun MeteogramLegend() {
 @Composable
 fun Meteogram(hours: List<HourlyWeather>, modifier: Modifier = Modifier, markStart: Boolean = true) {
     if (hours.size < 2) return
-    val tempColor = WeatherTheme.colors.temperature
-    val heavyPrecipColor = MaterialTheme.colorScheme.primary
-    val lightPrecipColor = MaterialTheme.colorScheme.inversePrimary
-    val gridColor = MaterialTheme.colorScheme.outlineVariant
-    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val textMeasurer = rememberTextMeasurer()
-    val axisStyle = MaterialTheme.typography.labelMedium.copy(color = labelColor)
-    val tempLabelStyle = MaterialTheme.typography.labelMedium.copy(
-        color = MaterialTheme.colorScheme.onSurface,
-        fontWeight = FontWeight.Medium,
+    val style = MeteogramStyle(
+        temperature = WeatherTheme.colors.temperature,
+        heavyPrecip = MaterialTheme.colorScheme.primary,
+        lightPrecip = MaterialTheme.colorScheme.inversePrimary,
+        grid = MaterialTheme.colorScheme.outlineVariant,
+        axisText = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+        temperatureText = MaterialTheme.typography.labelMedium.copy(
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Medium,
+        ),
     )
+    val textMeasurer = rememberTextMeasurer()
+    Canvas(modifier) { drawMeteogram(hours, style, textMeasurer, markStart) }
+}
 
-    Canvas(modifier) {
-        // Okraj = polovina šířky sloupce v řádku větru → body grafu sedí přesně nad větrem.
-        val inset = size.width / (COLUMNS * 2)
-        val step = (size.width - 2 * inset) / (hours.size - 1)
-        fun x(i: Int) = inset + i * step
+/** Barvy a písmo meteogramu – v aplikaci z motivu, ve widgetu z jeho barevného schématu. */
+data class MeteogramStyle(
+    val temperature: Color,
+    val heavyPrecip: Color,
+    val lightPrecip: Color,
+    val grid: Color,
+    val axisText: TextStyle,
+    val temperatureText: TextStyle,
+)
 
-        val axisLabelHeight = 18.dp.toPx()
-        val barsBottom = size.height - axisLabelHeight - 4.dp.toPx()
-        val barsMaxHeight = 28.dp.toPx()
-        val tempTop = 20.dp.toPx()
-        val tempBottom = barsBottom - 22.dp.toPx()
+/** Kreslení meteogramu do [DrawScope.size] – sdílí ho aplikace i widget (bitmapa). */
+fun DrawScope.drawMeteogram(
+    hours: List<HourlyWeather>,
+    style: MeteogramStyle,
+    textMeasurer: TextMeasurer,
+    markStart: Boolean = true,
+) {
+    if (hours.size < 2) return
+    val tempColor = style.temperature
+    val heavyPrecipColor = style.heavyPrecip
+    val lightPrecipColor = style.lightPrecip
+    val gridColor = style.grid
+    val axisStyle = style.axisText
+    val tempLabelStyle = style.temperatureText
+    // Okraj = polovina šířky sloupce v řádku větru → body grafu sedí přesně nad větrem.
+    val inset = size.width / (COLUMNS * 2)
+    val step = (size.width - 2 * inset) / (hours.size - 1)
+    fun x(i: Int) = inset + i * step
 
-        // Mřížka: 3 vodorovné linky.
-        val gridYs = listOf(tempTop, (tempTop + barsBottom) / 2f - 6.dp.toPx(), barsBottom - 12.dp.toPx())
-        gridYs.forEach { y ->
-            drawLine(gridColor, Offset(inset, y), Offset(size.width - inset, y), strokeWidth = 1.dp.toPx())
-        }
+    val axisLabelHeight = 18.dp.toPx()
+    val barsBottom = size.height - axisLabelHeight - 4.dp.toPx()
+    val barsMaxHeight = 28.dp.toPx()
+    val tempTop = 20.dp.toPx()
+    val tempBottom = barsBottom - 22.dp.toPx()
 
-        // Srážky: úhrn za předchozí hodinu → sloupec mezi body i-1 a i.
-        val precipScale = maxOf(hours.maxOf { it.precipitation }, PRECIP_SCALE_MIN_MM)
-        val barWidth = step * 0.7f
-        for (i in 1 until hours.size) {
-            val mm = hours[i].precipitation
-            if (mm < 0.05) continue
-            val h = maxOf((mm / precipScale).toFloat() * barsMaxHeight, 3.dp.toPx())
-            val cx = (x(i - 1) + x(i)) / 2f
-            drawRoundRect(
-                color = if (mm >= HEAVY_PRECIP_MM) heavyPrecipColor else lightPrecipColor,
-                topLeft = Offset(cx - barWidth / 2f, barsBottom - h),
-                size = Size(barWidth, h),
-                cornerRadius = CornerRadius(2.dp.toPx()),
-            )
-        }
+    // Mřížka: 3 vodorovné linky.
+    val gridYs = listOf(tempTop, (tempTop + barsBottom) / 2f - 6.dp.toPx(), barsBottom - 12.dp.toPx())
+    gridYs.forEach { y ->
+        drawLine(gridColor, Offset(inset, y), Offset(size.width - inset, y), strokeWidth = 1.dp.toPx())
+    }
 
-        // Teplota: hladká křivka (monotónní kubická interpolace – nepřestřeluje extrémy).
-        val temps = hours.map { it.temperature }
-        val tMax = temps.max()
-        val tMin = temps.min()
-        val range = (tMax - tMin).takeIf { it > 0.5 } ?: 1.0
-        fun y(t: Double) = (tempBottom - (t - tMin) / range * (tempBottom - tempTop)).toFloat()
-        val points = temps.mapIndexed { i, t -> Offset(x(i), y(t)) }
-        val path = monotoneCurve(points)
-        drawPath(
-            path,
-            tempColor,
-            style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+    // Srážky: úhrn za předchozí hodinu → sloupec mezi body i-1 a i.
+    val precipScale = maxOf(hours.maxOf { it.precipitation }, PRECIP_SCALE_MIN_MM)
+    val barWidth = step * 0.7f
+    for (i in 1 until hours.size) {
+        val mm = hours[i].precipitation
+        if (mm < 0.05) continue
+        val h = maxOf((mm / precipScale).toFloat() * barsMaxHeight, 3.dp.toPx())
+        val cx = (x(i - 1) + x(i)) / 2f
+        drawRoundRect(
+            color = if (mm >= HEAVY_PRECIP_MM) heavyPrecipColor else lightPrecipColor,
+            topLeft = Offset(cx - barWidth / 2f, barsBottom - h),
+            size = Size(barWidth, h),
+            cornerRadius = CornerRadius(2.dp.toPx()),
         )
-        if (markStart) drawCircle(tempColor, radius = 4.dp.toPx(), center = points[0])
+    }
 
-        // Popisky teploty: teď, maximum, minimum, konec – bez překryvů.
-        val labelIndices = listOf(0, temps.indexOf(tMax), temps.indexOf(tMin), temps.lastIndex).distinct()
-        val placed = mutableListOf<Pair<Float, Float>>()
-        for (i in labelIndices) {
-            val layout: TextLayoutResult = textMeasurer.measure(formatTemperature(temps[i]), tempLabelStyle)
-            val w = layout.size.width.toFloat()
-            val left = (points[i].x - w / 2f).coerceIn(0f, size.width - w)
-            val gap = 4.dp.toPx()
-            if (placed.any { (l, r) -> left < r + gap && left + w > l - gap }) continue
-            placed += left to left + w
-            val top = (points[i].y - layout.size.height - 4.dp.toPx()).coerceAtLeast(0f)
-            drawText(layout, topLeft = Offset(left, top))
-        }
+    // Teplota: hladká křivka (monotónní kubická interpolace – nepřestřeluje extrémy).
+    val temps = hours.map { it.temperature }
+    val tMax = temps.max()
+    val tMin = temps.min()
+    val range = (tMax - tMin).takeIf { it > 0.5 } ?: 1.0
+    fun y(t: Double) = (tempBottom - (t - tMin) / range * (tempBottom - tempTop)).toFloat()
+    val points = temps.mapIndexed { i, t -> Offset(x(i), y(t)) }
+    val path = monotoneCurve(points)
+    drawPath(
+        path,
+        tempColor,
+        style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+    )
+    if (markStart) drawCircle(tempColor, radius = 4.dp.toPx(), center = points[0])
 
-        // Osa hodin po 3 h.
-        for (i in hours.indices step 3) {
-            val label = textMeasurer.measure("%02d".format(hours[i].time.hour), axisStyle)
-            drawText(
-                label,
-                topLeft = Offset(x(i) - label.size.width / 2f, size.height - label.size.height),
-            )
-        }
+    // Popisky teploty: teď, maximum, minimum, konec – bez překryvů.
+    val labelIndices = listOf(0, temps.indexOf(tMax), temps.indexOf(tMin), temps.lastIndex).distinct()
+    val placed = mutableListOf<Pair<Float, Float>>()
+    for (i in labelIndices) {
+        val layout: TextLayoutResult = textMeasurer.measure(formatTemperature(temps[i]), tempLabelStyle)
+        val w = layout.size.width.toFloat()
+        val left = (points[i].x - w / 2f).coerceIn(0f, size.width - w)
+        val gap = 4.dp.toPx()
+        if (placed.any { (l, r) -> left < r + gap && left + w > l - gap }) continue
+        placed += left to left + w
+        val top = (points[i].y - layout.size.height - 4.dp.toPx()).coerceAtLeast(0f)
+        drawText(layout, topLeft = Offset(left, top))
+    }
+
+    // Osa hodin po 3 h.
+    for (i in hours.indices step 3) {
+        val label = textMeasurer.measure("%02d".format(hours[i].time.hour), axisStyle)
+        drawText(
+            label,
+            topLeft = Offset(x(i) - label.size.width / 2f, size.height - label.size.height),
+        )
     }
 }
 

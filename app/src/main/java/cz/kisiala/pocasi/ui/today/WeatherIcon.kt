@@ -23,6 +23,16 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
+/** Barvy ikony počasí – v aplikaci z motivu, ve widgetu z jeho barevného schématu. */
+data class WeatherIconColors(
+    val sun: Color,
+    val moon: Color,
+    val cloud: Color,
+    /** Výplň mraku = pozadí pod ikonou (mrak zakryje slunce). */
+    val cloudFill: Color,
+    val drop: Color,
+)
+
 /** Obrysová ikona počasí kreslená přes Canvas (slunce/měsíc, mrak, déšť, sníh). */
 @Composable
 fun WeatherIcon(
@@ -31,40 +41,46 @@ fun WeatherIcon(
     contentDescription: String?,
     modifier: Modifier = Modifier,
 ) {
-    val sunColor = WeatherTheme.colors.temperature
-    val moonColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val cloudColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val cloudFill = MaterialTheme.colorScheme.background
-    val dropColor = MaterialTheme.colorScheme.primary
-
+    val colors = WeatherIconColors(
+        sun = WeatherTheme.colors.temperature,
+        moon = MaterialTheme.colorScheme.onSurfaceVariant,
+        cloud = MaterialTheme.colorScheme.onSurfaceVariant,
+        cloudFill = MaterialTheme.colorScheme.background,
+        drop = MaterialTheme.colorScheme.primary,
+    )
     Canvas(modifier.semantics { if (contentDescription != null) this.contentDescription = contentDescription }) {
-        val s = size.minDimension
-        val stroke = Stroke(width = s * 0.045f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        val celestial: DrawScope.(Offset, Float) -> Unit = { center, r ->
-            if (isDay) drawSun(center, r, sunColor, stroke) else drawMoon(center, r, moonColor, stroke)
+        drawWeatherIcon(type, isDay, colors)
+    }
+}
+
+/** Kreslení ikony do čtverce velikosti [DrawScope.size] – sdílí ji aplikace i widget (bitmapa). */
+fun DrawScope.drawWeatherIcon(type: WeatherIconType, isDay: Boolean, colors: WeatherIconColors) {
+    val s = size.minDimension
+    val stroke = Stroke(width = s * 0.045f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+    val celestial: DrawScope.(Offset, Float) -> Unit = { center, r ->
+        if (isDay) drawSun(center, r, colors.sun, stroke) else drawMoon(center, r, colors.moon, stroke)
+    }
+    when (type) {
+        WeatherIconType.Clear -> celestial(Offset(s * 0.5f, s * 0.5f), s * 0.2f)
+        WeatherIconType.PartlyCloudy -> {
+            celestial(Offset(s * 0.38f, s * 0.36f), s * 0.15f)
+            drawCloud(Offset(s * 0.28f, s * 0.36f), s * 0.68f, colors.cloud, colors.cloudFill, stroke)
         }
-        when (type) {
-            WeatherIconType.Clear -> celestial(Offset(s * 0.5f, s * 0.5f), s * 0.2f)
-            WeatherIconType.PartlyCloudy -> {
-                celestial(Offset(s * 0.38f, s * 0.36f), s * 0.15f)
-                drawCloud(Offset(s * 0.28f, s * 0.36f), s * 0.68f, cloudColor, cloudFill, stroke)
-            }
-            WeatherIconType.Cloudy -> drawCloud(Offset(s * 0.12f, s * 0.24f), s * 0.76f, cloudColor, cloudFill, stroke)
-            WeatherIconType.Rain, WeatherIconType.Snow -> {
-                drawCloud(Offset(s * 0.12f, s * 0.12f), s * 0.76f, cloudColor, cloudFill, stroke)
-                val xs = listOf(0.34f, 0.5f, 0.66f)
-                xs.forEach { x ->
-                    if (type == WeatherIconType.Rain) {
-                        drawLine(
-                            dropColor,
-                            Offset(s * (x + 0.03f), s * 0.68f),
-                            Offset(s * (x - 0.03f), s * 0.84f),
-                            strokeWidth = stroke.width,
-                            cap = StrokeCap.Round,
-                        )
-                    } else {
-                        drawCircle(dropColor, radius = s * 0.035f, center = Offset(s * x, s * 0.76f))
-                    }
+        WeatherIconType.Cloudy -> drawCloud(Offset(s * 0.12f, s * 0.24f), s * 0.76f, colors.cloud, colors.cloudFill, stroke)
+        WeatherIconType.Rain, WeatherIconType.Snow -> {
+            drawCloud(Offset(s * 0.12f, s * 0.12f), s * 0.76f, colors.cloud, colors.cloudFill, stroke)
+            val xs = listOf(0.34f, 0.5f, 0.66f)
+            xs.forEach { x ->
+                if (type == WeatherIconType.Rain) {
+                    drawLine(
+                        colors.drop,
+                        Offset(s * (x + 0.03f), s * 0.68f),
+                        Offset(s * (x - 0.03f), s * 0.84f),
+                        strokeWidth = stroke.width,
+                        cap = StrokeCap.Round,
+                    )
+                } else {
+                    drawCircle(colors.drop, radius = s * 0.035f, center = Offset(s * x, s * 0.76f))
                 }
             }
         }

@@ -57,10 +57,14 @@ import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.model.Place
 import cz.kisiala.pocasi.ui.LoadError
 
-/** Celoobrazovkové vyhledávání místa; po výběru se místo vybere a hledání zavře. */
+/**
+ * Celoobrazovkové vyhledávání místa; po výběru se místo vybere v aplikaci (nebo předá [onPick],
+ * např. při nastavení widgetu) a hledání zavře.
+ */
 @Composable
 fun PlaceSearchScreen(
     onClose: () -> Unit,
+    onPick: ((Place) -> Unit)? = null,
     viewModel: PlaceSearchViewModel = viewModel(factory = PlaceSearchViewModel.Factory),
 ) {
     Dialog(
@@ -100,7 +104,7 @@ fun PlaceSearchScreen(
                         favoriteIds = state.favoriteIds,
                         onToggleFavorite = viewModel::toggleFavorite,
                         onSelect = {
-                            viewModel.select(it)
+                            if (onPick != null) onPick(it) else viewModel.select(it)
                             onClose()
                         },
                     )

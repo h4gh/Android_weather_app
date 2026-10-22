@@ -81,4 +81,8 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.maplibre.android)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+    // Glance s sebou tahá starý WorkManager; novější má pravidla pro R8 (full mode).
+    implementation(libs.androidx.work.runtime)
 }

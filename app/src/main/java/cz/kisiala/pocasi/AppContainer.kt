@@ -10,9 +10,14 @@ import cz.kisiala.pocasi.data.location.LocationProvider
 import cz.kisiala.pocasi.data.radar.RadarRepository
 import cz.kisiala.pocasi.data.remote.GeocodingApi
 import cz.kisiala.pocasi.data.remote.OpenMeteoApi
+import cz.kisiala.pocasi.widget.WidgetUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -63,4 +68,20 @@ class AppContainer(context: Context) {
         scope = appScope,
         myLocationLabel = context.getString(R.string.place_my_location),
     )
+
+    init {
+        val appContext = context.applicationContext
+        // Widgety s „Moje poloha“ berou polohu z aplikace – po jejím novém zjištění je obnovíme.
+        appScope.launch {
+            placeRepository.lastLocation
+                .map { it?.let { place -> place.latitude to place.longitude } }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect { WidgetUpdater.refreshAll(appContext, onlyCurrentLocation = true) }
+        }
+        // Změna vzhledu v aplikaci platí i pro widgety.
+        appScope.launch {
+            settingsRepository.themeMode.distinctUntilChanged().drop(1).collect { WidgetUpdater.redrawAll(appContext) }
+        }
+    }
 }
