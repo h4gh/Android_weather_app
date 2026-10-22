@@ -75,6 +75,8 @@ import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.model.NearbyPrecipitation
 import cz.kisiala.pocasi.model.Place
 import cz.kisiala.pocasi.model.RadarScale
+import cz.kisiala.pocasi.ui.common.AppMenuActions
+import cz.kisiala.pocasi.ui.common.AppOverflowMenu
 import cz.kisiala.pocasi.ui.common.message
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -82,7 +84,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlin.math.roundToInt
 
 @Composable
-fun RadarScreen(viewModel: RadarViewModel, modifier: Modifier = Modifier) {
+fun RadarScreen(viewModel: RadarViewModel, menuActions: AppMenuActions, modifier: Modifier = Modifier) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val centerRequests = remember { MutableSharedFlow<Place>(extraBufferCapacity = 1) }
@@ -135,6 +137,7 @@ fun RadarScreen(viewModel: RadarViewModel, modifier: Modifier = Modifier) {
                 time = state.displayed?.time?.let(::formatRadarTime),
                 translucent = state.translucent,
                 onToggleTranslucent = viewModel::toggleTranslucent,
+                menuActions = menuActions,
             )
             state.nearby?.takeIf { state.latest != null }?.let { NearbyChip(it) }
         }
@@ -168,9 +171,14 @@ fun RadarScreen(viewModel: RadarViewModel, modifier: Modifier = Modifier) {
     }
 }
 
-/** Plovoucí lišta ve stylu M3 search baru: název, čas snímku a menu vrstev. */
+/** Plovoucí lišta ve stylu M3 search baru: název, čas snímku, menu vrstev a menu ⋮. */
 @Composable
-private fun RadarSearchBar(time: String?, translucent: Boolean, onToggleTranslucent: () -> Unit) {
+private fun RadarSearchBar(
+    time: String?,
+    translucent: Boolean,
+    onToggleTranslucent: () -> Unit,
+    menuActions: AppMenuActions,
+) {
     var layersOpen by remember { mutableStateOf(false) }
     Surface(
         shape = CircleShape,
@@ -196,7 +204,7 @@ private fun RadarSearchBar(time: String?, translucent: Boolean, onToggleTransluc
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Box(Modifier.padding(end = 4.dp)) {
+            Box {
                 IconButton(onClick = { layersOpen = true }) {
                     Icon(Icons.Outlined.Layers, contentDescription = stringResource(R.string.action_layers))
                 }
@@ -208,6 +216,7 @@ private fun RadarSearchBar(time: String?, translucent: Boolean, onToggleTransluc
                     )
                 }
             }
+            Box(Modifier.padding(end = 4.dp)) { AppOverflowMenu(menuActions) }
         }
     }
 }

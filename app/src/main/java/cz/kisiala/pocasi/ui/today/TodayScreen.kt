@@ -21,18 +21,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Radar
 import androidx.compose.material.icons.outlined.Umbrella
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,7 +46,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,12 +60,13 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cz.kisiala.pocasi.BuildConfig
 import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.model.Forecast
 import cz.kisiala.pocasi.model.NearbyPrecipitation
 import cz.kisiala.pocasi.model.Place
 import cz.kisiala.pocasi.ui.ForecastViewModel
+import cz.kisiala.pocasi.ui.common.AppMenuActions
+import cz.kisiala.pocasi.ui.common.AppOverflowMenu
 import cz.kisiala.pocasi.ui.common.ErrorState
 import cz.kisiala.pocasi.ui.common.LoadingState
 import cz.kisiala.pocasi.ui.common.PlacesMenu
@@ -88,6 +84,7 @@ import kotlin.math.roundToInt
 @Composable
 fun TodayScreen(
     onOpenRadar: () -> Unit,
+    menuActions: AppMenuActions,
     modifier: Modifier = Modifier,
     viewModel: ForecastViewModel = viewModel(factory = ForecastViewModel.Factory),
     radarViewModel: RadarViewModel = viewModel(factory = RadarViewModel.Factory),
@@ -96,7 +93,6 @@ fun TodayScreen(
     val radarState by radarViewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    var showAbout by rememberSaveable { mutableStateOf(false) }
 
     val searchSoon = stringResource(R.string.search_coming_soon)
     val errorText = state.error?.let { stringResource(it.message) }
@@ -117,7 +113,7 @@ fun TodayScreen(
                 places = state.places,
                 onSelectPlace = viewModel::selectPlace,
                 onSearch = { scope.launch { snackbarHostState.showSnackbar(searchSoon) } },
-                onAbout = { showAbout = true },
+                menuActions = menuActions,
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -144,8 +140,6 @@ fun TodayScreen(
             }
         }
     }
-
-    if (showAbout) AboutDialog(onDismiss = { showAbout = false })
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -155,10 +149,9 @@ private fun TodayTopBar(
     places: List<Place>,
     onSelectPlace: (Place) -> Unit,
     onSearch: () -> Unit,
-    onAbout: () -> Unit,
+    menuActions: AppMenuActions,
 ) {
     var placesOpen by remember { mutableStateOf(false) }
-    var menuOpen by remember { mutableStateOf(false) }
 
     TopAppBar(
         title = {
@@ -198,20 +191,7 @@ private fun TodayTopBar(
             IconButton(onClick = onSearch) {
                 Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.action_search))
             }
-            Box {
-                IconButton(onClick = { menuOpen = true }) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.action_more))
-                }
-                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.menu_about)) },
-                        onClick = {
-                            menuOpen = false
-                            onAbout()
-                        },
-                    )
-                }
-            }
+            AppOverflowMenu(menuActions)
         },
     )
 }
@@ -433,25 +413,5 @@ fun WeatherCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         content = content,
-    )
-}
-
-@Composable
-private fun AboutDialog(onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.menu_about)) },
-        text = {
-            Column {
-                Text(stringResource(R.string.about_text))
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
     )
 }

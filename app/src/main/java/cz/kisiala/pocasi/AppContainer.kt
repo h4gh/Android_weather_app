@@ -2,6 +2,7 @@ package cz.kisiala.pocasi
 
 import android.content.Context
 import cz.kisiala.pocasi.data.PlaceRepository
+import cz.kisiala.pocasi.data.SettingsRepository
 import cz.kisiala.pocasi.data.WeatherRepository
 import cz.kisiala.pocasi.data.location.LocationProvider
 import cz.kisiala.pocasi.data.radar.RadarRepository
@@ -35,6 +36,8 @@ class AppContainer(context: Context) {
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
         .create(OpenMeteoApi::class.java)
+
+    val settingsRepository = SettingsRepository(context)
 
     val locationProvider = LocationProvider(context)
 

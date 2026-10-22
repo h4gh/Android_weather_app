@@ -65,6 +65,8 @@ import cz.kisiala.pocasi.model.DailyWeather
 import cz.kisiala.pocasi.model.HourlyWeather
 import cz.kisiala.pocasi.model.Place
 import cz.kisiala.pocasi.ui.ForecastViewModel
+import cz.kisiala.pocasi.ui.common.AppMenuActions
+import cz.kisiala.pocasi.ui.common.AppOverflowMenu
 import cz.kisiala.pocasi.ui.common.ErrorState
 import cz.kisiala.pocasi.ui.common.LoadingState
 import cz.kisiala.pocasi.ui.common.PlacesMenu
@@ -94,6 +96,7 @@ private val DETAIL_HOURS = listOf(6, 9, 12, 15, 18, 21)
 @Composable
 fun OutlookScreen(
     viewModel: ForecastViewModel,
+    menuActions: AppMenuActions,
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -115,6 +118,7 @@ fun OutlookScreen(
                 place = state.place,
                 places = state.places,
                 onSelectPlace = viewModel::selectPlace,
+                menuActions = menuActions,
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -150,6 +154,7 @@ private fun OutlookTopBar(
     place: Place?,
     places: List<Place>,
     onSelectPlace: (Place) -> Unit,
+    menuActions: AppMenuActions,
 ) {
     var placesOpen by remember { mutableStateOf(false) }
     TopAppBar(
@@ -170,6 +175,7 @@ private fun OutlookTopBar(
                     onDismiss = { placesOpen = false },
                 )
             }
+            AppOverflowMenu(menuActions)
         },
     )
 }

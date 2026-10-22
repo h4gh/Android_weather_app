@@ -12,6 +12,10 @@
     <string name="action_retry">Zkusit znovu</string>
     <string name="action_map">Mapa</string>
     <string name="action_close">Zavřít</string>
+    <string name="menu_appearance">Vzhled</string>
+    <string name="theme_light">Světlý</string>
+    <string name="theme_dark">Tmavý</string>
+    <string name="theme_system">Podle systému</string>
     <string name="menu_about">O aplikaci</string>
     <string name="about_text">Předpověď: ČHMÚ (model ALADIN) přes Open-Meteo\nRadar: ČHMÚ (opendata.chmi.cz)\nMapa: OpenFreeMap, © OpenStreetMap</string>
     <string name="about_version">Verze %1$s</string>

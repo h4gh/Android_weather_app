@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -30,9 +31,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.compose.LifecycleStartEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cz.kisiala.pocasi.AppContainer
 import cz.kisiala.pocasi.R
+import cz.kisiala.pocasi.model.ThemeMode
+import cz.kisiala.pocasi.ui.common.AboutDialog
+import cz.kisiala.pocasi.ui.common.AppMenuActions
+import cz.kisiala.pocasi.ui.common.AppearanceDialog
 import cz.kisiala.pocasi.ui.outlook.OutlookScreen
 import cz.kisiala.pocasi.ui.radar.RadarScreen
 import cz.kisiala.pocasi.ui.radar.RadarViewModel
@@ -62,6 +68,21 @@ fun AppRoot(container: AppContainer) {
         onStopOrDispose {}
     }
     LocationPermissionEffect(container)
+
+    // Menu ⋮ je na všech obrazovkách, dialogy zobrazuje AppRoot.
+    var showAppearance by rememberSaveable { mutableStateOf(false) }
+    var showAbout by rememberSaveable { mutableStateOf(false) }
+    val menuActions = remember { AppMenuActions(onAppearance = { showAppearance = true }, onAbout = { showAbout = true }) }
+    if (showAppearance) {
+        val settings = container.settingsRepository
+        val themeMode by settings.themeMode.collectAsStateWithLifecycle(ThemeMode.System)
+        AppearanceDialog(
+            selected = themeMode,
+            onSelect = { container.appScope.launch { settings.setThemeMode(it) } },
+            onDismiss = { showAppearance = false },
+        )
+    }
+    if (showAbout) AboutDialog(onDismiss = { showAbout = false })
 
     Scaffold(
         bottomBar = {
@@ -96,6 +117,7 @@ fun AppRoot(container: AppContainer) {
                 forecastViewModel = forecastViewModel,
                 radarViewModel = radarViewModel,
                 onOpenRadar = { open(AppTab.Radar) },
+                menuActions = menuActions,
             )
         }
     }
@@ -108,6 +130,7 @@ private fun AppPage(
     forecastViewModel: ForecastViewModel,
     radarViewModel: RadarViewModel,
     onOpenRadar: () -> Unit,
+    menuActions: AppMenuActions,
 ) {
     val modifier = Modifier
         .padding(innerPadding)
@@ -115,16 +138,18 @@ private fun AppPage(
     when (tab) {
         AppTab.Today -> TodayScreen(
             onOpenRadar = onOpenRadar,
+            menuActions = menuActions,
             modifier = modifier,
             viewModel = forecastViewModel,
             radarViewModel = radarViewModel,
         )
-        AppTab.Outlook -> OutlookScreen(viewModel = forecastViewModel, modifier = modifier)
+        AppTab.Outlook -> OutlookScreen(viewModel = forecastViewModel, menuActions = menuActions, modifier = modifier)
         // Mapa je celoobrazovková – pod stavovým řádkem, odsazená jen od Navigation Baru.
         AppTab.Radar -> {
             val bottom = PaddingValues(bottom = innerPadding.calculateBottomPadding())
             RadarScreen(
                 viewModel = radarViewModel,
+                menuActions = menuActions,
                 modifier = Modifier
                     .padding(bottom)
                     .consumeWindowInsets(bottom),
