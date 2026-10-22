@@ -73,6 +73,7 @@
     <string name="next24_title">Dalších 24 hodin</string>
     <string name="legend_temperature">Teplota</string>
     <string name="legend_precipitation">Srážky</string>
+    <string name="outlook_day_chart">Průběh dne</string>
     <string name="wind_kmh">Vítr km/h</string>
     <string name="gusts_peak">Nárazy až %1$d km/h kolem %2$s h</string>
 

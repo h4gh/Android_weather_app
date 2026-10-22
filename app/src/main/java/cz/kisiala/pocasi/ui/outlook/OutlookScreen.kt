@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.model.DailyWeather
+import cz.kisiala.pocasi.model.HourlyWeather
 import cz.kisiala.pocasi.model.Place
 import cz.kisiala.pocasi.ui.ForecastViewModel
 import cz.kisiala.pocasi.ui.common.ErrorState
@@ -69,6 +70,8 @@ import cz.kisiala.pocasi.ui.common.LoadingState
 import cz.kisiala.pocasi.ui.common.PlacesMenu
 import cz.kisiala.pocasi.ui.common.message
 import cz.kisiala.pocasi.ui.theme.WeatherTheme
+import cz.kisiala.pocasi.ui.today.Meteogram
+import cz.kisiala.pocasi.ui.today.MeteogramLegend
 import cz.kisiala.pocasi.ui.today.STRONG_WIND_KMH
 import cz.kisiala.pocasi.ui.today.WeatherCard
 import cz.kisiala.pocasi.ui.today.WeatherIcon
@@ -76,6 +79,7 @@ import cz.kisiala.pocasi.ui.today.formatPrecipitation
 import cz.kisiala.pocasi.ui.today.formatTemperature
 import cz.kisiala.pocasi.ui.today.label
 import cz.kisiala.pocasi.ui.today.windDirectionName
+import java.time.LocalDate
 import kotlin.math.roundToInt
 
 private const val OUTLOOK_DAYS = 5
@@ -127,7 +131,11 @@ fun OutlookScreen(
                     onRefresh = viewModel::refresh,
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    OutlookContent(placeName = state.place?.name, days = forecast.outlook(OUTLOOK_DAYS))
+                    OutlookContent(
+                        placeName = state.place?.name,
+                        days = forecast.outlook(OUTLOOK_DAYS),
+                        hoursOf = forecast::hoursOf,
+                    )
                 }
                 state.error != null && !state.isLoading -> ErrorState(state.error!!, onRetry = viewModel::retry)
                 else -> LoadingState()
@@ -167,7 +175,11 @@ private fun OutlookTopBar(
 }
 
 @Composable
-private fun OutlookContent(placeName: String?, days: List<DailyWeather>) {
+private fun OutlookContent(
+    placeName: String?,
+    days: List<DailyWeather>,
+    hoursOf: (LocalDate) -> List<HourlyWeather>,
+) {
     // Rozbalený je nejvýš jeden den; výchozí je zítřek.
     var expanded by rememberSaveable { mutableStateOf<Int?>(0) }
     val scaleMin = days.minOfOrNull { it.temperatureMin } ?: 0.0
@@ -202,6 +214,7 @@ private fun OutlookContent(placeName: String?, days: List<DailyWeather>) {
                     key(days[index].date) {
                         DayItem(
                             day = days[index],
+                            hours = hoursOf(days[index].date),
                             isTomorrow = index == 0,
                             expanded = index == expanded,
                             scaleMin = scaleMin,
@@ -239,6 +252,7 @@ private fun LessCertainLabel() {
 @Composable
 private fun DayItem(
     day: DailyWeather,
+    hours: List<HourlyWeather>,
     isTomorrow: Boolean,
     expanded: Boolean,
     scaleMin: Double,
@@ -260,7 +274,7 @@ private fun DayItem(
         if (expanded) {
             val visible = remember { MutableTransitionState(false).apply { targetState = true } }
             AnimatedVisibility(visibleState = visible, enter = expandVertically() + fadeIn()) {
-                DayDetail(day)
+                DayDetail(day, hours)
             }
         }
     }
@@ -400,9 +414,34 @@ private fun TemperatureRangeBar(
 }
 
 @Composable
-private fun DayDetail(day: DailyWeather) {
+private fun DayDetail(day: DailyWeather, hours: List<HourlyWeather>) {
     Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        // Průběh dne 00–24 h stejným meteogramem jako „Dalších 24 hodin“ na obrazovce Dnes.
+        if (hours.size >= 2) {
+            Row(
+                Modifier.padding(top = 14.dp, bottom = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    stringResource(R.string.outlook_day_chart),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.weight(1f),
+                )
+                MeteogramLegend()
+            }
+            Meteogram(
+                hours = hours,
+                markStart = false,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(124.dp),
+            )
+            HorizontalDivider(
+                modifier = Modifier.padding(top = 12.dp),
+                color = MaterialTheme.colorScheme.outlineVariant,
+            )
+        }
         Row(
             Modifier
                 .fillMaxWidth()

@@ -35,6 +35,13 @@ data class Forecast(
     fun outlook(days: Int): List<DailyWeather> =
         daily.filter { it.date > current.time.toLocalDate() }.take(days)
 
+    /** Hodinové hodnoty dne [date] od 00 do 00 následujícího dne (25 hodnot, poslední den příp. méně). */
+    fun hoursOf(date: LocalDate): List<HourlyWeather> {
+        val start = date.atStartOfDay()
+        val end = start.plusDays(1)
+        return hourly.filter { it.time >= start && it.time <= end }
+    }
+
     /** Tendence tlaku za poslední 3 hodiny (příp. následující, pokud data zpětně chybí). */
     val pressureTrend: PressureTrend by lazy {
         val now = hourly.getOrNull(currentHourIndex)?.pressure ?: return@lazy PressureTrend.Steady

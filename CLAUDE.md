@@ -84,7 +84,13 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
 1. **Dnes** – kostra aplikace + obrazovka Dnes ✅ hotovo
 2. **Výhled na 5 dní** ✅ hotovo
 3. **Radar** s animací posledních 2 h + karta „Nejbližší srážky“ na obrazovce Dnes ✅ hotovo
-4. **Dál:** oblíbená místa (vyhledávání + uložení, přepínání v top app baru) a widget
+4. **Úpravy (říjen 2026)** – postupně, po každé build + instalace release na telefon, potvrzení, commit:
+   1. Výhled – v rozbaleném dni „Průběh dne“: meteogram 00–24 h (stejná komponenta jako Dnes) ✅
+   2. Navigace swipem mezi Dnes / Výhled / Radar (HorizontalPager + spodní lišta); na Radaru gesta patří mapě
+   3. Menu ⋮ – Vzhled: Světlý / Tmavý / Podle systému (výchozí), uložení v DataStore, platí i pro styl mapy
+   4. Menu ⋮ – O aplikaci: název, verze, zdroje dat s atribucemi a licencemi
+   5. O aplikaci – autor Ondřej Kisiala, klikací kontakt o.kisiala@gmail.com (připomínky, návrhy, žádosti o update)
+5. **Dál:** oblíbená místa (vyhledávání + uložení, přepínání v top app baru) a widget
 
 ## Stav
 

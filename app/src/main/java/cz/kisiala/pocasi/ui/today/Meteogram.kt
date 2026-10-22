@@ -67,7 +67,7 @@ fun Next24HoursCard(hours: List<HourlyWeather>, modifier: Modifier = Modifier) {
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.weight(1f),
                 )
-                Legend()
+                MeteogramLegend()
             }
             Spacer(Modifier.height(16.dp))
             Meteogram(
@@ -85,8 +85,9 @@ fun Next24HoursCard(hours: List<HourlyWeather>, modifier: Modifier = Modifier) {
     }
 }
 
+/** Legenda meteogramu (teplota křivkou, srážky sloupci) – sdílí ji i Výhled. */
 @Composable
-private fun Legend() {
+fun MeteogramLegend() {
     val labelStyle = MaterialTheme.typography.labelLarge
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Box(
@@ -107,9 +108,12 @@ private fun Legend() {
     }
 }
 
-
+/**
+ * Teplota jako křivka a srážky jako sloupce, osa po 3 h; body sedí nad [COLUMNS] sloupci (25 hodnot = 24 h).
+ * [markStart] zvýrazní první bod tečkou (aktuální stav na obrazovce Dnes). Používá ho i rozbalený den ve Výhledu.
+ */
 @Composable
-private fun Meteogram(hours: List<HourlyWeather>, modifier: Modifier = Modifier) {
+fun Meteogram(hours: List<HourlyWeather>, modifier: Modifier = Modifier, markStart: Boolean = true) {
     if (hours.size < 2) return
     val tempColor = WeatherTheme.colors.temperature
     val heavyPrecipColor = MaterialTheme.colorScheme.primary
@@ -170,7 +174,7 @@ private fun Meteogram(hours: List<HourlyWeather>, modifier: Modifier = Modifier)
             tempColor,
             style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
         )
-        drawCircle(tempColor, radius = 4.dp.toPx(), center = points[0])
+        if (markStart) drawCircle(tempColor, radius = 4.dp.toPx(), center = points[0])
 
         // Popisky teploty: teď, maximum, minimum, konec – bez překryvů.
         val labelIndices = listOf(0, temps.indexOf(tMax), temps.indexOf(tMin), temps.lastIndex).distinct()
