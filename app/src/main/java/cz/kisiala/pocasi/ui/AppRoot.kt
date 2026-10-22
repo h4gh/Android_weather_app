@@ -39,6 +39,7 @@ import cz.kisiala.pocasi.model.ThemeMode
 import cz.kisiala.pocasi.ui.about.AboutScreen
 import cz.kisiala.pocasi.ui.common.AppMenuActions
 import cz.kisiala.pocasi.ui.common.AppearanceDialog
+import cz.kisiala.pocasi.ui.favorites.FavoritesScreen
 import cz.kisiala.pocasi.ui.outlook.OutlookScreen
 import cz.kisiala.pocasi.ui.radar.RadarScreen
 import cz.kisiala.pocasi.ui.radar.RadarViewModel
@@ -74,11 +75,13 @@ fun AppRoot(container: AppContainer) {
     var showAppearance by rememberSaveable { mutableStateOf(false) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
     var showSearch by rememberSaveable { mutableStateOf(false) }
+    var showFavorites by rememberSaveable { mutableStateOf(false) }
     val menuActions = remember {
         AppMenuActions(
             onAppearance = { showAppearance = true },
             onAbout = { showAbout = true },
             onSearchPlace = { showSearch = true },
+            onEditFavorites = { showFavorites = true },
         )
     }
     if (showAppearance) {
@@ -91,6 +94,16 @@ fun AppRoot(container: AppContainer) {
         )
     }
     if (showAbout) AboutScreen(onClose = { showAbout = false })
+    if (showFavorites) {
+        FavoritesScreen(
+            places = container.placeRepository,
+            onAddPlace = {
+                showFavorites = false
+                showSearch = true
+            },
+            onClose = { showFavorites = false },
+        )
+    }
     if (showSearch) PlaceSearchScreen(onClose = { showSearch = false })
 
     Scaffold(

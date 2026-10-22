@@ -1,8 +1,10 @@
 package cz.kisiala.pocasi.ui.common
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.DropdownMenu
@@ -15,7 +17,7 @@ import androidx.compose.ui.res.stringResource
 import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.model.Place
 
-/** Přepínání míst – připraveno na budoucí oblíbená místa (přibudou do [places]). */
+/** Přepínání míst: aktuální poloha, oblíbená, hledané místo; pod nimi přidání a úprava oblíbených. */
 @Composable
 fun PlacesMenu(
     expanded: Boolean,
@@ -23,7 +25,7 @@ fun PlacesMenu(
     places: List<Place>,
     onSelect: (Place) -> Unit,
     onDismiss: () -> Unit,
-    onAddPlace: () -> Unit,
+    actions: AppMenuActions,
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         places.forEach { place ->
@@ -39,7 +41,11 @@ fun PlacesMenu(
                 },
                 leadingIcon = {
                     Icon(
-                        if (place.isCurrentLocation) Icons.Outlined.MyLocation else Icons.Outlined.Place,
+                        when (place.kind) {
+                            Place.Kind.CurrentLocation -> Icons.Outlined.MyLocation
+                            Place.Kind.Saved -> Icons.Filled.Star
+                            else -> Icons.Outlined.Place
+                        },
                         contentDescription = null,
                     )
                 },
@@ -53,7 +59,20 @@ fun PlacesMenu(
         DropdownMenuItem(
             text = { Text(stringResource(R.string.places_add)) },
             leadingIcon = { Icon(Icons.Outlined.Add, contentDescription = null) },
-            onClick = onAddPlace,
+            onClick = {
+                onDismiss()
+                actions.onSearchPlace()
+            },
         )
+        if (places.any { it.kind == Place.Kind.Saved }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.places_edit_favorites)) },
+                leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
+                onClick = {
+                    onDismiss()
+                    actions.onEditFavorites()
+                },
+            )
+        }
     }
 }

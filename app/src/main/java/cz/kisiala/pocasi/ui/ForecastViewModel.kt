@@ -105,6 +105,8 @@ class ForecastViewModel(
 
     fun selectPlace(place: Place) = placeRepository.select(place)
 
+    fun toggleFavorite(place: Place) = placeRepository.toggleFavorite(place)
+
     fun errorShown() = _state.update { it.copy(error = null) }
 
     companion object {

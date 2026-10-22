@@ -24,10 +24,11 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
 - Vrstvy (balíček `cz.kisiala.pocasi`):
   - `model/` – doménové třídy: `Place`, `Forecast` (+ `CurrentWeather`, `HourlyWeather`, `DailyWeather`,
     odvození `WeatherCondition` z oblačnosti a srážek, tendence tlaku).
-  - `data/remote/` – `OpenMeteoApi` (Retrofit) a DTO; `data/WeatherRepository` mapuje DTO → doména.
-  - `data/PlaceRepository` – zdroj pravdy o místech: `places` (aktuální poloha + uložená místa)
-    a `selectedPlace`. **Oblíbená místa** se doplní nahrazením `savedPlaces` tokem z DataStore/Room;
-    UI (rozbalovací menu v top app baru) už pracuje se seznamem `places`.
+  - `data/remote/` – `OpenMeteoApi`, `GeocodingApi` (Retrofit) a DTO; `data/WeatherRepository` mapuje DTO → doména,
+    `data/PlaceSearchRepository` hledá místa (jen CZ, SK, PL, AT, DE; česká první).
+  - `data/PlaceRepository` – zdroj pravdy o místech: `places` (poloha, oblíbená, vybrané hledané místo – jen dokud
+    je vybrané, záložní Frýdek-Místek jen bez polohy i oblíbených), `selectedPlace`, přidání/odebrání/pořadí
+    oblíbených. `data/PlaceStore` je trvale ukládá do DataStore (JSON) i s naposledy vybraným místem.
   - `data/location/LocationProvider` – poloha a reverzní geokódování.
   - `data/SettingsRepository` – nastavení v DataStore (`themeMode`: Světlý / Tmavý / Podle systému),
     `MainActivity` z něj odvozuje `darkTheme` pro `PocasiTheme` i styl systémových lišt.
@@ -37,6 +38,8 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
   - `ui/ForecastViewModel` – UiState: loading / data / error, pull-to-refresh, výběr místa.
   - `ui/common/` – `LoadingState`, `ErrorState`, `PlacesMenu`, `AppMenu` (menu ⋮ na všech obrazovkách, `AppearanceDialog`).
   - `ui/about/AboutScreen` – celoobrazovková stránka O aplikaci: verze, autor a kontakt, zdroje dat s atribucemi.
+  - `ui/search/` – `PlaceSearchScreen` + `PlaceSearchViewModel` (celoobrazovkové hledání, ☆ u výsledků).
+  - `ui/favorites/FavoritesScreen` – úprava oblíbených: tažení za úchyt (řádky s `key`), odebrání s „Vrátit“.
   - `model/Radar` – geometrie kompozitu (`RadarGrid`, ořez na datovou oblast), škála ČHMÚ (`RadarScale`),
     hledání nejbližších srážek (`NearbyPrecipitation.find`, okolí 100 km, odfiltrování osamocených pixelů).
   - `data/radar/RadarRepository` – stahování a dekódování PNG (OkHttp), cache snímků v paměti.
@@ -100,7 +103,7 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
    1. ✅ Vyhledávání míst: lupa na Dnes (a „Přidat místo…“ v menu míst) otevře hledání přes Open-Meteo Geocoding
       (Česko a okolní státy, výsledky z Česka první); výběr místa → předpověď. Radar: tečka a nejbližší déšť
       pro vybrané místo. Záložní místo bez polohy: Frýdek-Místek (místo Prahy), v menu jen když chybí poloha.
-   2. Oblíbená místa v DataStore: ☆ ve výsledcích hledání a u názvu místa na Dnes; menu míst = Moje poloha,
+   2. ✅ Oblíbená místa v DataStore: ☆ ve výsledcích hledání a u názvu místa na Dnes; menu míst = Moje poloha,
       oblíbená, „Přidat místo…“, „Upravit oblíbená“ (odebrání, pořadí tažením); pamatuje si vybrané místo.
 6. **Dál:** widget
 
@@ -113,7 +116,9 @@ Hotovo:
 - Obrazovka Výhled dle návrhu: 5 dní od zítřka, zítřek rozbalený, rozbalený den ve vlastní kartě,
   dny 4–5 pod nadpisem „Obecnější předpověď (model ECMWF)“. Ikona dne z průměrné denní oblačnosti
   (7–20 h), déšť až od 1 mm za den. Ikona místa v top app baru otevírá stejné menu míst jako Dnes.
-- Poloha z GPS/sítě s fallbackem na Prahu, reverzní geokódování, menu míst v top app baru.
+- Poloha z GPS/sítě s fallbackem na Frýdek-Místek, reverzní geokódování, menu míst v top app baru.
+- Vyhledávání míst a oblíbená místa (hvězdička na Dnes a ve výsledcích, úprava pořadí, pamatuje si vybrané místo);
+  Radar ukazuje značku a nejbližší déšť pro vybrané místo.
 - Menu ⋮ na všech obrazovkách: Vzhled (uložený v DataStore, platí i pro mapu) a O aplikaci (verze, autor
   s klikacím e-mailem – předmět v mailto URI kvůli Gmailu i v EXTRA_SUBJECT, zdroje dat, atribuce a licence).
 - Obrazovka Radar: celoobrazovková mapa, plovoucí lišta s časem zobrazeného snímku a menu Vrstvy
@@ -123,7 +128,6 @@ Hotovo:
   místo; tlačítko „Mapa“ přepne na Radar.
 
 Zbývá / známá omezení:
-- Tlačítko Hledat ukazuje jen snackbar „připravujeme“.
 - Předpověď se necachuje (každé spuštění = nový požadavek), radarové snímky jen v paměti; poloha se zjišťuje při startu a při pull-to-refresh.
 - Žádné testy zatím nejsou.
 

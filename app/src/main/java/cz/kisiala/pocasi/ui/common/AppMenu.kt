@@ -38,6 +38,7 @@ class AppMenuActions(
     val onAppearance: () -> Unit,
     val onAbout: () -> Unit,
     val onSearchPlace: () -> Unit,
+    val onEditFavorites: () -> Unit,
 )
 
 /** Tlačítko ⋮ s menu Vzhled / O aplikaci. */

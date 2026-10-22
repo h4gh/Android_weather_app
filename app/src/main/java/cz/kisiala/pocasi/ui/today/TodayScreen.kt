@@ -22,9 +22,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Radar
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material.icons.outlined.Umbrella
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -32,6 +34,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -45,11 +48,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -76,6 +81,7 @@ import cz.kisiala.pocasi.ui.radar.arrowRotation
 import cz.kisiala.pocasi.ui.radar.directionAdverb
 import cz.kisiala.pocasi.ui.radar.formatRadarTime
 import cz.kisiala.pocasi.ui.radar.label
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,6 +96,8 @@ fun TodayScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val radarState by radarViewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val errorText = state.error?.let { stringResource(it.message) }
 
@@ -109,6 +117,17 @@ fun TodayScreen(
                 places = state.places,
                 onSelectPlace = viewModel::selectPlace,
                 onSearch = menuActions.onSearchPlace,
+                onToggleFavorite = { place ->
+                    val message = context.getString(
+                        if (place.kind == Place.Kind.Saved) R.string.favorite_removed else R.string.favorite_added,
+                        place.name,
+                    )
+                    viewModel.toggleFavorite(place)
+                    scope.launch {
+                        snackbarHostState.currentSnackbarData?.dismiss()
+                        snackbarHostState.showSnackbar(message)
+                    }
+                },
                 menuActions = menuActions,
             )
         },
@@ -145,6 +164,7 @@ private fun TodayTopBar(
     places: List<Place>,
     onSelectPlace: (Place) -> Unit,
     onSearch: () -> Unit,
+    onToggleFavorite: (Place) -> Unit,
     menuActions: AppMenuActions,
 ) {
     var placesOpen by remember { mutableStateOf(false) }
@@ -180,14 +200,24 @@ private fun TodayTopBar(
                         onSelectPlace(it)
                     },
                     onDismiss = { placesOpen = false },
-                    onAddPlace = {
-                        placesOpen = false
-                        menuActions.onSearchPlace()
-                    },
+                    actions = menuActions,
                 )
             }
         },
         actions = {
+            // Aktuální poloha se mění – do oblíbených se ukládají jen konkrétní místa.
+            if (place != null && !place.isCurrentLocation) {
+                val favorite = place.kind == Place.Kind.Saved
+                IconButton(onClick = { onToggleFavorite(place) }) {
+                    Icon(
+                        if (favorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                        contentDescription = stringResource(
+                            if (favorite) R.string.action_remove_favorite else R.string.action_add_favorite,
+                        ),
+                        tint = if (favorite) MaterialTheme.colorScheme.primary else LocalContentColor.current,
+                    )
+                }
+            }
             IconButton(onClick = onSearch) {
                 Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.action_search))
             }

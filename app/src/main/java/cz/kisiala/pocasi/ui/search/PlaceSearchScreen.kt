@@ -17,13 +17,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -94,6 +97,8 @@ fun PlaceSearchScreen(
                     state.results.isEmpty() -> SearchMessage(stringResource(R.string.search_hint))
                     else -> SearchResults(
                         results = state.results,
+                        favoriteIds = state.favoriteIds,
+                        onToggleFavorite = viewModel::toggleFavorite,
                         onSelect = {
                             viewModel.select(it)
                             onClose()
@@ -164,13 +169,30 @@ private fun SearchField(
 }
 
 @Composable
-private fun SearchResults(results: List<Place>, onSelect: (Place) -> Unit) {
+private fun SearchResults(
+    results: List<Place>,
+    favoriteIds: Set<String>,
+    onSelect: (Place) -> Unit,
+    onToggleFavorite: (Place) -> Unit,
+) {
     LazyColumn(Modifier.fillMaxSize()) {
         items(results, key = { it.id }) { place ->
             ListItem(
                 headlineContent = { Text(place.name) },
                 supportingContent = place.region?.let { { Text(it) } },
                 leadingContent = { Icon(Icons.Outlined.Place, contentDescription = null) },
+                trailingContent = {
+                    val favorite = place.id in favoriteIds
+                    IconButton(onClick = { onToggleFavorite(place) }) {
+                        Icon(
+                            if (favorite) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                            contentDescription = stringResource(
+                                if (favorite) R.string.action_remove_favorite else R.string.action_add_favorite,
+                            ),
+                            tint = if (favorite) MaterialTheme.colorScheme.primary else LocalContentColor.current,
+                        )
+                    }
+                },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 modifier = Modifier.clickable { onSelect(place) },
             )

@@ -173,10 +173,7 @@ private fun OutlookTopBar(
                         onSelectPlace(it)
                     },
                     onDismiss = { placesOpen = false },
-                    onAddPlace = {
-                        placesOpen = false
-                        menuActions.onSearchPlace()
-                    },
+                    actions = menuActions,
                 )
             }
             AppOverflowMenu(menuActions)

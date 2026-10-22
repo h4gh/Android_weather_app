@@ -27,6 +27,8 @@ data class PlaceSearchUiState(
     val results: List<Place> = emptyList(),
     val isSearching: Boolean = false,
     val error: LoadError? = null,
+    /** Id oblíbených míst – hvězdička u výsledků. */
+    val favoriteIds: Set<String> = emptySet(),
 ) {
     /** Dotaz je dost dlouhý na hledání a výsledky k němu už dorazily. */
     val showsNoResults: Boolean
@@ -48,6 +50,9 @@ class PlaceSearchViewModel(
     init {
         viewModelScope.launch {
             _state.map { it.query.trim() }.distinctUntilChanged().collectLatest { search(it) }
+        }
+        viewModelScope.launch {
+            placeRepository.favorites.collect { list -> _state.update { it.copy(favoriteIds = list.mapTo(HashSet()) { p -> p.id }) } }
         }
     }
 
@@ -77,6 +82,8 @@ class PlaceSearchViewModel(
     }
 
     fun select(place: Place) = placeRepository.select(place)
+
+    fun toggleFavorite(place: Place) = placeRepository.toggleFavorite(place)
 
     companion object {
         private const val DEBOUNCE_MS = 300L

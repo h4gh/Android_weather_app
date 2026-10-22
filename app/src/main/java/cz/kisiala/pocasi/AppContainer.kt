@@ -3,6 +3,7 @@ package cz.kisiala.pocasi
 import android.content.Context
 import cz.kisiala.pocasi.data.PlaceRepository
 import cz.kisiala.pocasi.data.PlaceSearchRepository
+import cz.kisiala.pocasi.data.PlaceStore
 import cz.kisiala.pocasi.data.SettingsRepository
 import cz.kisiala.pocasi.data.WeatherRepository
 import cz.kisiala.pocasi.data.location.LocationProvider
@@ -58,6 +59,7 @@ class AppContainer(context: Context) {
 
     val placeRepository = PlaceRepository(
         locationProvider = locationProvider,
+        store = PlaceStore(context),
         scope = appScope,
         myLocationLabel = context.getString(R.string.place_my_location),
     )
