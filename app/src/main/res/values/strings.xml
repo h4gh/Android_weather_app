@@ -19,6 +19,10 @@
     <string name="menu_about">O aplikaci</string>
     <string name="about_version_full">Verze %1$s (%2$d)</string>
     <string name="about_tagline">Předpověď počasí a radar srážek pro Česko</string>
+    <string name="about_author_title">Autor a kontakt</string>
+    <string name="about_author_name">Ondřej Kisiala</string>
+    <string name="about_contact_text">Připomínky, návrhy na vylepšení i žádosti o update posílejte na e-mail:</string>
+    <string name="about_contact_subject">Aplikace Počasí</string>
     <string name="about_sources_title">Zdroje dat</string>
     <string name="about_forecast_title">Předpověď počasí</string>
     <string name="about_forecast_text">Numerický model ALADIN Českého hydrometeorologického ústavu (ČHMÚ) na zhruba 3 dny, dál doplněný globálním modelem ECMWF IFS. Data poskytuje služba Open-Meteo (model chmi_aladin_seamless) zdarma pro nekomerční použití.</string>

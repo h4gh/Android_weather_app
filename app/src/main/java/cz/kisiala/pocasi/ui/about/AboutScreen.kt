@@ -1,5 +1,8 @@
 package cz.kisiala.pocasi.ui.about
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -21,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -35,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -43,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.net.toUri
 import cz.kisiala.pocasi.BuildConfig
 import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.ui.today.WeatherCard
@@ -125,6 +131,8 @@ private fun AboutContent(onClose: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             AppHeader()
+            SectionTitle(R.string.about_author_title)
+            AuthorCard()
             SectionTitle(R.string.about_sources_title)
             DATA_SOURCES.forEach { DataSourceCard(it) }
             Text(
@@ -190,6 +198,47 @@ private fun AppHeader() {
         }
     }
 }
+
+@Composable
+private fun AuthorCard() {
+    val context = LocalContext.current
+    val subject = stringResource(R.string.about_contact_subject)
+    WeatherCard {
+        Column(Modifier.padding(16.dp)) {
+            Text(
+                stringResource(R.string.about_author_name),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(stringResource(R.string.about_contact_text), style = MaterialTheme.typography.bodyMedium)
+            TextButton(
+                onClick = {
+                    // Gmail čte předmět jen z mailto URI, jiní klienti (Outlook) z EXTRA_SUBJECT – dáme obojí.
+                    val intent = Intent(Intent.ACTION_SENDTO, "mailto:$AUTHOR_EMAIL?subject=${Uri.encode(subject)}".toUri())
+                        .putExtra(Intent.EXTRA_SUBJECT, subject)
+                    // Bez e-mailového klienta se nic nestane (místo pádu).
+                    try {
+                        context.startActivity(intent)
+                    } catch (_: ActivityNotFoundException) {
+                    }
+                },
+                modifier = Modifier.offset(x = (-12).dp),
+            ) {
+                Icon(
+                    Icons.Outlined.Email,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .size(18.dp),
+                )
+                Text(AUTHOR_EMAIL)
+            }
+        }
+    }
+}
+
+private const val AUTHOR_EMAIL = "o.kisiala@gmail.com"
 
 @Composable
 private fun SectionTitle(@StringRes text: Int) {

@@ -89,7 +89,7 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
    2. Navigace swipem mezi Dnes / Výhled / Radar (HorizontalPager + spodní lišta); na Radaru gesta patří mapě ✅
    3. Menu ⋮ – Vzhled: Světlý / Tmavý / Podle systému (výchozí), uložení v DataStore, platí i pro styl mapy ✅
    4. Menu ⋮ – O aplikaci: název, verze, zdroje dat s atribucemi a licencemi ✅
-   5. O aplikaci – autor Ondřej Kisiala, klikací kontakt o.kisiala@gmail.com (připomínky, návrhy, žádosti o update)
+   5. O aplikaci – autor Ondřej Kisiala, klikací kontakt o.kisiala@gmail.com (připomínky, návrhy, žádosti o update) ✅
    6. Výhled – rozbalený den se sbalí klepnutím kamkoli do jeho otevřené karty (nejen na hlavičku)
 5. **Dál:** oblíbená místa (vyhledávání + uložení, přepínání v top app baru) a widget
 
