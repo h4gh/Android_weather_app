@@ -18,7 +18,7 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
   verze knihoven v `gradle/libs.versions.toml`. minSdk 26, compile/target 37.
 - Síť: Retrofit + kotlinx.serialization (OkHttp).
 - Poloha: systémový `LocationManager` přes `LocationManagerCompat` (bez Play Services),
-  název místa přes `Geocoder` (při selhání „Moje poloha“). Bez oprávnění → výchozí Praha.
+  název místa přes `Geocoder` (při selhání „Moje poloha“). Bez polohy → záložní místo Frýdek-Místek.
 - Grafy kreslit přes Compose `Canvas` – žádné grafové knihovny.
 - Ruční DI: `AppContainer` (vytváří `PocasiApp`), ViewModely přes `viewModelFactory`.
 - Vrstvy (balíček `cz.kisiala.pocasi`):
@@ -96,7 +96,13 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
    4. Menu ⋮ – O aplikaci: název, verze, zdroje dat s atribucemi a licencemi ✅
    5. O aplikaci – autor Ondřej Kisiala, klikací kontakt o.kisiala@gmail.com (připomínky, návrhy, žádosti o update) ✅
    6. Výhled – rozbalený den se sbalí klepnutím kamkoli do jeho otevřené karty (nejen na hlavičku) ✅
-5. **Dál:** oblíbená místa (vyhledávání + uložení, přepínání v top app baru) a widget
+5. **Oblíbená místa** – dva kroky, po každém build + instalace release, potvrzení, commit:
+   1. ✅ Vyhledávání míst: lupa na Dnes (a „Přidat místo…“ v menu míst) otevře hledání přes Open-Meteo Geocoding
+      (Česko a okolní státy, výsledky z Česka první); výběr místa → předpověď. Radar: tečka a nejbližší déšť
+      pro vybrané místo. Záložní místo bez polohy: Frýdek-Místek (místo Prahy), v menu jen když chybí poloha.
+   2. Oblíbená místa v DataStore: ☆ ve výsledcích hledání a u názvu místa na Dnes; menu míst = Moje poloha,
+      oblíbená, „Přidat místo…“, „Upravit oblíbená“ (odebrání, pořadí tažením); pamatuje si vybrané místo.
+6. **Dál:** widget
 
 ## Stav
 

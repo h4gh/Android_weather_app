@@ -42,6 +42,7 @@ import cz.kisiala.pocasi.ui.common.AppearanceDialog
 import cz.kisiala.pocasi.ui.outlook.OutlookScreen
 import cz.kisiala.pocasi.ui.radar.RadarScreen
 import cz.kisiala.pocasi.ui.radar.RadarViewModel
+import cz.kisiala.pocasi.ui.search.PlaceSearchScreen
 import cz.kisiala.pocasi.ui.today.TodayScreen
 import kotlinx.coroutines.launch
 
@@ -72,7 +73,14 @@ fun AppRoot(container: AppContainer) {
     // Menu ⋮ je na všech obrazovkách, dialogy zobrazuje AppRoot.
     var showAppearance by rememberSaveable { mutableStateOf(false) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
-    val menuActions = remember { AppMenuActions(onAppearance = { showAppearance = true }, onAbout = { showAbout = true }) }
+    var showSearch by rememberSaveable { mutableStateOf(false) }
+    val menuActions = remember {
+        AppMenuActions(
+            onAppearance = { showAppearance = true },
+            onAbout = { showAbout = true },
+            onSearchPlace = { showSearch = true },
+        )
+    }
     if (showAppearance) {
         val settings = container.settingsRepository
         val themeMode by settings.themeMode.collectAsStateWithLifecycle(ThemeMode.System)
@@ -83,6 +91,7 @@ fun AppRoot(container: AppContainer) {
         )
     }
     if (showAbout) AboutScreen(onClose = { showAbout = false })
+    if (showSearch) PlaceSearchScreen(onClose = { showSearch = false })
 
     Scaffold(
         bottomBar = {

@@ -45,7 +45,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,7 +76,6 @@ import cz.kisiala.pocasi.ui.radar.arrowRotation
 import cz.kisiala.pocasi.ui.radar.directionAdverb
 import cz.kisiala.pocasi.ui.radar.formatRadarTime
 import cz.kisiala.pocasi.ui.radar.label
-import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,9 +90,7 @@ fun TodayScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val radarState by radarViewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
-    val searchSoon = stringResource(R.string.search_coming_soon)
     val errorText = state.error?.let { stringResource(it.message) }
 
     // Chyba při obnově nad zobrazenými daty → jen snackbar, data zůstávají.
@@ -112,7 +108,7 @@ fun TodayScreen(
                 place = state.place,
                 places = state.places,
                 onSelectPlace = viewModel::selectPlace,
-                onSearch = { scope.launch { snackbarHostState.showSnackbar(searchSoon) } },
+                onSearch = menuActions.onSearchPlace,
                 menuActions = menuActions,
             )
         },
@@ -184,6 +180,10 @@ private fun TodayTopBar(
                         onSelectPlace(it)
                     },
                     onDismiss = { placesOpen = false },
+                    onAddPlace = {
+                        placesOpen = false
+                        menuActions.onSearchPlace()
+                    },
                 )
             }
         },

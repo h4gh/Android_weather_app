@@ -1,10 +1,10 @@
 package cz.kisiala.pocasi.ui.common
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material.icons.outlined.Place
-import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -23,6 +23,7 @@ fun PlacesMenu(
     places: List<Place>,
     onSelect: (Place) -> Unit,
     onDismiss: () -> Unit,
+    onAddPlace: () -> Unit,
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         places.forEach { place ->
@@ -50,10 +51,9 @@ fun PlacesMenu(
         }
         HorizontalDivider()
         DropdownMenuItem(
-            text = { Text(stringResource(R.string.favorites_coming_soon)) },
-            leadingIcon = { Icon(Icons.Outlined.StarOutline, contentDescription = null) },
-            enabled = false,
-            onClick = {},
+            text = { Text(stringResource(R.string.places_add)) },
+            leadingIcon = { Icon(Icons.Outlined.Add, contentDescription = null) },
+            onClick = onAddPlace,
         )
     }
 }

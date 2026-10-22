@@ -44,7 +44,7 @@ import org.maplibre.geojson.Point
 data class MapInsets(val top: Int, val bottom: Int, val side: Int)
 
 /**
- * Mapa OpenFreeMap (MapLibre) s překryvem radaru a tečkou polohy.
+ * Mapa OpenFreeMap (MapLibre) s překryvem radaru, tečkou polohy a značkou vybraného místa.
  * Styl se řídí světlým/tmavým schématem aplikace.
  */
 @Composable
@@ -52,6 +52,7 @@ fun RadarMap(
     radarImage: Bitmap?,
     radarOpacity: Float,
     myLocation: Place?,
+    selectedPlace: Place?,
     insets: MapInsets,
     centerRequests: Flow<Place>,
     modifier: Modifier = Modifier,
@@ -61,6 +62,7 @@ fun RadarMap(
     val colors = MaterialTheme.colorScheme
     val dark = colors.surface.luminance() < 0.5f
     val dotColors = DotColors(dot = colors.primary, ring = colors.surface, halo = colors.onSurface.copy(alpha = 0.14f))
+    val placeColors = DotColors(dot = colors.tertiary, ring = colors.surface, halo = colors.tertiary.copy(alpha = 0.22f))
 
     val mapView = remember {
         val options = MapLibreMapOptions.createFromAttributes(context)
@@ -104,6 +106,7 @@ fun RadarMap(
     LaunchedEffect(c, insets) { c.setInsets(insets) }
     LaunchedEffect(c, radarImage, radarOpacity) { c.setRadar(radarImage, radarOpacity) }
     LaunchedEffect(c, myLocation, dotColors) { c.setLocation(myLocation, dotColors) }
+    LaunchedEffect(c, selectedPlace, placeColors) { c.setSelectedPlace(selectedPlace, placeColors) }
     LaunchedEffect(c, centerRequests) { centerRequests.collect { c.centerOn(it) } }
 }
 
@@ -117,6 +120,8 @@ private class RadarMapController(private val map: MapLibreMap) {
     private var radarOpacity = 1f
     private var location: Place? = null
     private var dotColors: DotColors? = null
+    private var selectedPlace: Place? = null
+    private var placeColors: DotColors? = null
     private var insets = MapInsets(0, 0, 0)
     private var cameraPlaced = false
 
@@ -136,6 +141,7 @@ private class RadarMapController(private val map: MapLibreMap) {
             addLocationLayers(loaded)
             applyRadar()
             applyLocation()
+            applySelectedPlace()
             if (!cameraPlaced) placeInitialCamera()
         }
     }
@@ -156,6 +162,12 @@ private class RadarMapController(private val map: MapLibreMap) {
         location = place
         dotColors = colors
         applyLocation()
+    }
+
+    fun setSelectedPlace(place: Place?, colors: DotColors) {
+        selectedPlace = place
+        placeColors = colors
+        applySelectedPlace()
     }
 
     fun centerOn(place: Place) {
@@ -192,6 +204,15 @@ private class RadarMapController(private val map: MapLibreMap) {
     }
 
     private fun addLocationLayers(style: Style) {
+        // Značka vybraného místa pod tečkou polohy.
+        style.addSource(GeoJsonSource(PLACE_SOURCE))
+        style.addLayer(CircleLayer(PLACE_HALO, PLACE_SOURCE).withProperties(PropertyFactory.circleRadius(16f)))
+        style.addLayer(
+            CircleLayer(PLACE_DOT, PLACE_SOURCE).withProperties(
+                PropertyFactory.circleRadius(7f),
+                PropertyFactory.circleStrokeWidth(3f),
+            ),
+        )
         style.addSource(GeoJsonSource(LOCATION_SOURCE))
         style.addLayer(
             CircleLayer(LOCATION_HALO, LOCATION_SOURCE).withProperties(PropertyFactory.circleRadius(22f)),
@@ -233,6 +254,26 @@ private class RadarMapController(private val map: MapLibreMap) {
         )
     }
 
+    private fun applySelectedPlace() {
+        val style = style ?: return
+        val colors = placeColors ?: return
+        val place = selectedPlace
+        val source = style.getSourceAs<GeoJsonSource>(PLACE_SOURCE) ?: return
+        if (place == null) {
+            source.setGeoJson(org.maplibre.geojson.FeatureCollection.fromFeatures(emptyList()))
+        } else {
+            source.setGeoJson(Point.fromLngLat(place.longitude, place.latitude))
+        }
+        style.getLayerAs<CircleLayer>(PLACE_HALO)?.setProperties(
+            PropertyFactory.circleColor(colors.halo.copy(alpha = 1f).toArgb()),
+            PropertyFactory.circleOpacity(colors.halo.alpha),
+        )
+        style.getLayerAs<CircleLayer>(PLACE_DOT)?.setProperties(
+            PropertyFactory.circleColor(colors.dot.toArgb()),
+            PropertyFactory.circleStrokeColor(colors.ring.toArgb()),
+        )
+    }
+
     /** OpenFreeMap má popisky primárně anglicky („Prague“) – přepneme na české názvy. */
     private fun useCzechLabels(style: Style) {
         val czech = Expression.coalesce(
@@ -252,6 +293,9 @@ private class RadarMapController(private val map: MapLibreMap) {
         private const val LOCATION_SOURCE = "my-location"
         private const val LOCATION_HALO = "my-location-halo"
         private const val LOCATION_DOT = "my-location-dot"
+        private const val PLACE_SOURCE = "selected-place"
+        private const val PLACE_HALO = "selected-place-halo"
+        private const val PLACE_DOT = "selected-place-dot"
         private const val LOCATE_ZOOM = 8.0
         private val EMPTY: Bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
         private val CZECHIA = LatLngBounds.from(51.06, 18.86, 48.55, 12.09)

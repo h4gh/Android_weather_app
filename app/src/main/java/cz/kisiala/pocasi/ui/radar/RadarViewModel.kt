@@ -45,6 +45,8 @@ data class RadarUiState(
     /** Nejbližší srážky od vybraného místa podle nejnovějšího snímku; `null` = zatím nevíme. */
     val nearby: NearbyPrecipitation? = null,
     val myLocation: Place? = null,
+    /** Vybrané místo, když to není aktuální poloha – na mapě vlastní značka, k němu se počítá [nearby]. */
+    val selectedPlace: Place? = null,
     val translucent: Boolean = false,
 ) {
     val latest: RadarFrame? get() = frames.lastOrNull()
@@ -78,6 +80,11 @@ class RadarViewModel(
         load()
         viewModelScope.launch {
             placeRepository.currentLocation.collect { place -> _state.update { it.copy(myLocation = place) } }
+        }
+        viewModelScope.launch {
+            placeRepository.selectedPlace.collect { place ->
+                _state.update { it.copy(selectedPlace = place?.takeUnless { p -> p.isCurrentLocation }) }
+            }
         }
         viewModelScope.launch {
             val latest = _state.map { it.latest }.distinctUntilChanged()

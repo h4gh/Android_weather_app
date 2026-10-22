@@ -13,7 +13,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * Zdroj pravdy o místech: aktuální poloha + uložená místa a to, které je vybrané.
+ * Zdroj pravdy o místech: aktuální poloha, místo z vyhledávání, uložená místa a to, které je vybrané.
  *
  * Oblíbená místa: stačí nahradit [savedPlaces] tokem z perzistentního úložiště
  * (DataStore/Room) a doplnit metody pro přidání/odebrání – UI už pracuje se seznamem [places].
@@ -24,15 +24,22 @@ class PlaceRepository(
     private val myLocationLabel: String,
 ) {
     private val currentLocationPlace = MutableStateFlow<Place?>(null)
-    private val savedPlaces = MutableStateFlow(listOf(Place.Prague))
+    /** Naposledy vybrané místo z vyhledávání (v menu míst, dokud se nevybere jiné hledané). */
+    private val searchedPlace = MutableStateFlow<Place?>(null)
+    private val savedPlaces = MutableStateFlow(emptyList<Place>())
     private val selectedId = MutableStateFlow<String?>(null)
     private val locationResolved = MutableStateFlow(false)
     private val mutex = Mutex()
 
-    /** Místa k výběru v top app baru – aktuální poloha (je-li známa) a pak uložená místa. */
+    /**
+     * Místa k výběru v top app baru – aktuální poloha, hledané místo a uložená místa.
+     * Záložní Frýdek-Místek jen tehdy, když chybí poloha i uložená místa.
+     */
     val places: StateFlow<List<Place>> =
-        combine(currentLocationPlace, savedPlaces) { current, saved -> listOfNotNull(current) + saved }
-            .stateIn(scope, SharingStarted.Eagerly, savedPlaces.value)
+        combine(currentLocationPlace, searchedPlace, savedPlaces) { current, searched, saved ->
+            val fallback = if (current == null && saved.isEmpty()) listOf(Place.FrydekMistek) else emptyList()
+            (listOfNotNull(current, searched) + saved + fallback).distinctBy { it.id }
+        }.stateIn(scope, SharingStarted.Eagerly, listOf(Place.FrydekMistek))
 
     /** Vybrané místo; `null`, dokud nevíme, zda máme polohu (čeká se na oprávnění/GPS). */
     val selectedPlace: StateFlow<Place?> =
@@ -46,12 +53,14 @@ class PlaceRepository(
     val isLocationResolved: Boolean get() = locationResolved.value
 
     fun select(place: Place) {
+        // Místo z vyhledávání nahradí předchozí hledané (pokud už není v seznamu).
+        if (place.kind == Place.Kind.Search && places.value.none { it.id == place.id }) searchedPlace.value = place
         selectedId.value = place.id
     }
 
     /**
      * Zjistí aktuální polohu (pokud je oprávnění) a její název.
-     * Bez polohy zůstane k dispozici jen výchozí místo (Praha).
+     * Bez polohy zůstane k dispozici záložní místo (Frýdek-Místek).
      */
     suspend fun refreshCurrentLocation() = mutex.withLock {
         val location = runCatching { locationProvider.currentLocation() }.getOrNull()

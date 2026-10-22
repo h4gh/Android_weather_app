@@ -25,8 +25,8 @@
     <string name="about_contact_subject">Aplikace Počasí</string>
     <string name="about_sources_title">Zdroje dat</string>
     <string name="about_forecast_title">Předpověď počasí</string>
-    <string name="about_forecast_text">Numerický model ALADIN Českého hydrometeorologického ústavu (ČHMÚ) na zhruba 3 dny, dál doplněný globálním modelem ECMWF IFS. Data poskytuje služba Open-Meteo (model chmi_aladin_seamless) zdarma pro nekomerční použití.</string>
-    <string name="about_forecast_attribution">Weather data by Open-Meteo.com, zdroj ČHMÚ a ECMWF. Licence CC BY 4.0.</string>
+    <string name="about_forecast_text">Numerický model ALADIN Českého hydrometeorologického ústavu (ČHMÚ) na zhruba 3 dny, dál doplněný globálním modelem ECMWF IFS. Data poskytuje služba Open-Meteo (model chmi_aladin_seamless) zdarma pro nekomerční použití. Vyhledávání míst: Open-Meteo Geocoding nad daty GeoNames.</string>
+    <string name="about_forecast_attribution">Weather data by Open-Meteo.com, zdroj ČHMÚ a ECMWF, místa GeoNames. Licence CC BY 4.0.</string>
     <string name="about_radar_title">Radar srážek</string>
     <string name="about_radar_text">Radarové kompozity ČHMÚ (maximální odrazivost, nový snímek každých 5 minut) z portálu otevřených dat ČHMÚ.</string>
     <string name="about_radar_attribution">Zdroj: ČHMÚ, opendata.chmi.cz. Licence CC BY 4.0.</string>
@@ -43,11 +43,17 @@
     <string name="about_libraries_title">Open-source knihovny</string>
     <string name="about_libraries_text">Jetpack Compose, AndroidX, Kotlin Coroutines a Serialization, Retrofit, OkHttp (Apache 2.0) · MapLibre Android (BSD 2-Clause)</string>
     <string name="about_disclaimer">Nejde o oficiální aplikaci ČHMÚ. Předpověď a radar slouží jen pro orientaci, oficiální výstrahy vydává ČHMÚ.</string>
-    <string name="search_coming_soon">Vyhledávání míst připravujeme</string>
-    <string name="favorites_coming_soon">Oblíbená místa připravujeme</string>
+    <string name="places_add">Přidat místo…</string>
+    <string name="radar_place_prefix">%1$s · %2$s</string>
+    <string name="search_placeholder">Hledat obec nebo město</string>
+    <string name="search_clear">Smazat</string>
+    <string name="search_hint">Zadejte název obce. Hledáme v Česku a okolních státech.</string>
+    <string name="search_no_results">Pro „%1$s“ jsme nic nenašli</string>
+    <string name="search_error_network">Vyhledávání se nezdařilo. Zkontrolujte připojení k internetu.</string>
+    <string name="search_error">Vyhledávání se nezdařilo. Zkuste to prosím za chvíli znovu.</string>
+    <string name="search_attribution">Vyhledávání: Open-Meteo Geocoding, data GeoNames (CC BY 4.0)</string>
 
     <string name="place_my_location">Moje poloha</string>
-    <string name="place_prague">Praha</string>
 
     <string name="loading">Načítám předpověď…</string>
     <string name="error_title">Předpověď se nepodařilo načíst</string>

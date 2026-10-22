@@ -2,10 +2,12 @@ package cz.kisiala.pocasi
 
 import android.content.Context
 import cz.kisiala.pocasi.data.PlaceRepository
+import cz.kisiala.pocasi.data.PlaceSearchRepository
 import cz.kisiala.pocasi.data.SettingsRepository
 import cz.kisiala.pocasi.data.WeatherRepository
 import cz.kisiala.pocasi.data.location.LocationProvider
 import cz.kisiala.pocasi.data.radar.RadarRepository
+import cz.kisiala.pocasi.data.remote.GeocodingApi
 import cz.kisiala.pocasi.data.remote.OpenMeteoApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +38,15 @@ class AppContainer(context: Context) {
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
         .create(OpenMeteoApi::class.java)
+
+    private val geocodingApi: GeocodingApi = Retrofit.Builder()
+        .baseUrl(GeocodingApi.BASE_URL)
+        .client(okHttp)
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+        .build()
+        .create(GeocodingApi::class.java)
+
+    val placeSearchRepository = PlaceSearchRepository(geocodingApi)
 
     val settingsRepository = SettingsRepository(context)
 

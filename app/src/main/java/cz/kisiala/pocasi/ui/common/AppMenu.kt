@@ -33,10 +33,11 @@ import androidx.compose.ui.unit.dp
 import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.model.ThemeMode
 
-/** Akce menu ⋮, společné pro všechny obrazovky (dialogy otevírá `AppRoot`). */
+/** Akce společné pro všechny obrazovky – menu ⋮ a hledání místa (dialogy otevírá `AppRoot`). */
 class AppMenuActions(
     val onAppearance: () -> Unit,
     val onAbout: () -> Unit,
+    val onSearchPlace: () -> Unit,
 )
 
 /** Tlačítko ⋮ s menu Vzhled / O aplikaci. */

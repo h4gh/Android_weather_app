@@ -4,7 +4,7 @@ package cz.kisiala.pocasi.model
  * Místo, pro které se zobrazuje předpověď.
  *
  * [id] je stabilní identifikátor – pro aktuální polohu [CURRENT_LOCATION_ID],
- * pro uložená (oblíbená) místa ho v budoucnu přidělí úložiště.
+ * pro místa z vyhledávání `geo-<GeoNames id>`.
  */
 data class Place(
     val id: String,
@@ -12,13 +12,18 @@ data class Place(
     val latitude: Double,
     val longitude: Double,
     val kind: Kind,
+    /** Upřesnění pod názvem (kraj, u zahraničí i stát); `null` u polohy a záložního místa. */
+    val region: String? = null,
 ) {
     enum class Kind {
         /** Poloha zařízení z GPS / sítě. */
         CurrentLocation,
 
-        /** Výchozí místo, když poloha není k dispozici. */
+        /** Záložní místo, když poloha není k dispozici. */
         Default,
+
+        /** Místo vybrané ve vyhledávání. */
+        Search,
 
         /** Místo uložené uživatelem (připravujeme). */
         Saved,
@@ -29,11 +34,11 @@ data class Place(
     companion object {
         const val CURRENT_LOCATION_ID = "current-location"
 
-        val Prague = Place(
-            id = "default-praha",
-            name = "Praha",
-            latitude = 50.0755,
-            longitude = 14.4378,
+        val FrydekMistek = Place(
+            id = "default-frydek-mistek",
+            name = "Frýdek-Místek",
+            latitude = 49.6833,
+            longitude = 18.35,
             kind = Kind.Default,
         )
     }

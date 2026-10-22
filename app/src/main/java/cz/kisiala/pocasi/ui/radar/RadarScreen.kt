@@ -119,6 +119,7 @@ fun RadarScreen(viewModel: RadarViewModel, menuActions: AppMenuActions, modifier
             radarImage = state.displayed?.image,
             radarOpacity = if (state.translucent) 0.45f else 0.8f,
             myLocation = state.myLocation,
+            selectedPlace = state.selectedPlace,
             insets = insets,
             centerRequests = centerRequests.asSharedFlow(),
             modifier = Modifier.fillMaxSize(),
@@ -139,7 +140,7 @@ fun RadarScreen(viewModel: RadarViewModel, menuActions: AppMenuActions, modifier
                 onToggleTranslucent = viewModel::toggleTranslucent,
                 menuActions = menuActions,
             )
-            state.nearby?.takeIf { state.latest != null }?.let { NearbyChip(it) }
+            state.nearby?.takeIf { state.latest != null }?.let { NearbyChip(it, placeName = state.selectedPlace?.name) }
         }
 
         Column(Modifier.align(Alignment.BottomCenter)) {
@@ -221,8 +222,9 @@ private fun RadarSearchBar(
     }
 }
 
+/** Nejbližší srážky; u vybraného místa (ne polohy) s jeho názvem, ať je jasné, k čemu se vztahují. */
 @Composable
-private fun NearbyChip(nearby: NearbyPrecipitation) {
+private fun NearbyChip(nearby: NearbyPrecipitation, placeName: String?) {
     val icon: ImageVector
     var rotation = 0f
     val text = when (nearby) {
@@ -264,7 +266,10 @@ private fun NearbyChip(nearby: NearbyPrecipitation) {
                     .rotate(rotation),
             )
             Spacer(Modifier.width(12.dp))
-            Text(text, style = MaterialTheme.typography.titleSmall)
+            Text(
+                if (placeName != null) stringResource(R.string.radar_place_prefix, placeName, text) else text,
+                style = MaterialTheme.typography.titleSmall,
+            )
         }
     }
 }
