@@ -36,7 +36,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cz.kisiala.pocasi.AppContainer
 import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.model.ThemeMode
-import cz.kisiala.pocasi.ui.common.AboutDialog
+import cz.kisiala.pocasi.ui.about.AboutScreen
 import cz.kisiala.pocasi.ui.common.AppMenuActions
 import cz.kisiala.pocasi.ui.common.AppearanceDialog
 import cz.kisiala.pocasi.ui.outlook.OutlookScreen
@@ -82,7 +82,7 @@ fun AppRoot(container: AppContainer) {
             onDismiss = { showAppearance = false },
         )
     }
-    if (showAbout) AboutDialog(onDismiss = { showAbout = false })
+    if (showAbout) AboutScreen(onClose = { showAbout = false })
 
     Scaffold(
         bottomBar = {
