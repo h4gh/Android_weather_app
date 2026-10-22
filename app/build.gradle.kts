@@ -40,12 +40,21 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Bez keystore.properties vznikne nepodepsané APK (nepodepisujeme potichu debug klíčem).
             signingConfig = signingConfigs.findByName("release")
+            // MapLibre má nativní knihovnu ~13 MB pro každou architekturu – release jen pro 64bit ARM
+            // (prakticky všechny dnešní telefony); x86 zbytečně jen pro emulátory, debug je má dál všechny.
+            ndk { abiFilters += "arm64-v8a" }
         }
     }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    // Nativní knihovny (MapLibre) v APK komprimovaně – menší soubor ke stažení/poslání,
+    // za cenu rozbalení při instalaci (v telefonu zabere o pár MB víc).
+    packaging {
+        jniLibs { useLegacyPackaging = true }
     }
 
     buildFeatures {
@@ -86,3 +95,12 @@ dependencies {
     // Glance s sebou tahá starý WorkManager; novější má pravidla pro R8 (full mode).
     implementation(libs.androidx.work.runtime)
 }
+
+// APK k rozeslání (kamarádům na test) se srozumitelným názvem: app/build/outputs/share/app-pocasi_release.apk
+// (do složky release kopírovat nejde – patří úlohám AGP).
+val copyShareableApk by tasks.registering(Copy::class) {
+    from(layout.buildDirectory.file("outputs/apk/release/app-release.apk"))
+    into(layout.buildDirectory.dir("outputs/share"))
+    rename { "app-pocasi_release.apk" }
+}
+tasks.matching { it.name == "assembleRelease" }.configureEach { finalizedBy(copyShareableApk) }

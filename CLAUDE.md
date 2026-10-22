@@ -151,6 +151,9 @@ Zbývá / známá omezení:
 
 - `gradlew.bat assembleDebug` → `app/build/outputs/apk/debug/app-debug.apk`
 - `gradlew.bat installDebug` nainstaluje do připojeného zařízení (USB ladění).
+- Release je jen pro `arm64-v8a` a s komprimovanými nativními knihovnami (MapLibre) → APK ~7 MB. Kopie k rozeslání
+  se srozumitelným názvem: `app/build/outputs/share/app-pocasi_release.apk`. Do telefonu:
+  `adb install -r app/build/outputs/apk/release/app-release.apk`.
 - Release build (`assembleRelease`) je s R8 a podepsaný vlastním klíčem `C:/Users/ondre/keys/pocasi-release.jks`
   (alias `pocasi`). Cesta a hesla jsou v `keystore.properties` v kořeni projektu – **není v gitu**.
   Bez tohoto souboru vznikne nepodepsané APK. Debug build dál používá debug klíč – release a debug
