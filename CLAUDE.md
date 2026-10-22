@@ -29,16 +29,21 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
     a `selectedPlace`. **Oblíbená místa** se doplní nahrazením `savedPlaces` tokem z DataStore/Room;
     UI (rozbalovací menu v top app baru) už pracuje se seznamem `places`.
   - `data/location/LocationProvider` – poloha a reverzní geokódování.
-  - `ui/AppRoot` – Scaffold s Navigation Barem, žádost o oprávnění k poloze; vytváří jednu instanci
+  - `data/SettingsRepository` – nastavení v DataStore (`themeMode`: Světlý / Tmavý / Podle systému),
+    `MainActivity` z něj odvozuje `darkTheme` pro `PocasiTheme` i styl systémových lišt.
+  - `ui/AppRoot` – Scaffold s Navigation Barem a `HorizontalPager` (swipe mezi obrazovkami, na Radaru vypnutý –
+    gesta patří mapě), dialog Vzhled a stránka O aplikaci, žádost o oprávnění k poloze; vytváří jednu instanci
     `ForecastViewModel`, kterou sdílí Dnes i Výhled (jeden dotaz na API).
   - `ui/ForecastViewModel` – UiState: loading / data / error, pull-to-refresh, výběr místa.
-  - `ui/common/` – `LoadingState`, `ErrorState`, `PlacesMenu`.
+  - `ui/common/` – `LoadingState`, `ErrorState`, `PlacesMenu`, `AppMenu` (menu ⋮ na všech obrazovkách, `AppearanceDialog`).
+  - `ui/about/AboutScreen` – celoobrazovková stránka O aplikaci: verze, autor a kontakt, zdroje dat s atribucemi.
   - `model/Radar` – geometrie kompozitu (`RadarGrid`, ořez na datovou oblast), škála ČHMÚ (`RadarScale`),
     hledání nejbližších srážek (`NearbyPrecipitation.find`, okolí 100 km, odfiltrování osamocených pixelů).
   - `data/radar/RadarRepository` – stahování a dekódování PNG (OkHttp), cache snímků v paměti.
   - `ui/radar/` – `RadarViewModel` (sdílený Dnes i Radarem, vytváří `AppRoot`; nejnovější snímek hned,
     animace až při otevření Radaru, obnova po 4 min), `RadarScreen`, `RadarMap` (MapLibre přes `AndroidView`).
-  - `ui/outlook/` – `OutlookScreen` (seznam dní, rozbalení jednoho dne, pruh teplot přes Canvas).
+  - `ui/outlook/` – `OutlookScreen` (seznam dní, rozbalení jednoho dne klepnutím kamkoli do něj, v detailu
+    `Meteogram` průběhu dne ze `ui/today`, pruh teplot přes Canvas).
   - `ui/today/` – `TodayScreen`,
     `Meteogram` (Canvas), `WeatherIcon` (Canvas ikony), `Format` (formátování, české popisky).
   - `ui/theme/` – `PocasiTheme`, barvy, vlastní barva `WeatherTheme.colors.temperature`.
@@ -90,20 +95,21 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
    3. Menu ⋮ – Vzhled: Světlý / Tmavý / Podle systému (výchozí), uložení v DataStore, platí i pro styl mapy ✅
    4. Menu ⋮ – O aplikaci: název, verze, zdroje dat s atribucemi a licencemi ✅
    5. O aplikaci – autor Ondřej Kisiala, klikací kontakt o.kisiala@gmail.com (připomínky, návrhy, žádosti o update) ✅
-   6. Výhled – rozbalený den se sbalí klepnutím kamkoli do jeho otevřené karty (nejen na hlavičku)
+   6. Výhled – rozbalený den se sbalí klepnutím kamkoli do jeho otevřené karty (nejen na hlavičku) ✅
 5. **Dál:** oblíbená místa (vyhledávání + uložení, přepínání v top app baru) a widget
 
 ## Stav
 
 Hotovo:
-- Kostra: Navigation Bar (Dnes / Výhled / Radar).
+- Kostra: Navigation Bar (Dnes / Výhled / Radar) + přepínání swipem (kromě Radaru).
 - Obrazovka Dnes kompletně dle návrhu, načítání, chybový stav se „Zkusit znovu“, pull-to-refresh,
   snackbar při chybě obnovy nad zobrazenými daty.
 - Obrazovka Výhled dle návrhu: 5 dní od zítřka, zítřek rozbalený, rozbalený den ve vlastní kartě,
   dny 4–5 pod nadpisem „Obecnější předpověď (model ECMWF)“. Ikona dne z průměrné denní oblačnosti
   (7–20 h), déšť až od 1 mm za den. Ikona místa v top app baru otevírá stejné menu míst jako Dnes.
 - Poloha z GPS/sítě s fallbackem na Prahu, reverzní geokódování, menu míst v top app baru.
-- Menu „Další možnosti“ → „O aplikaci“ s atribucí dat.
+- Menu ⋮ na všech obrazovkách: Vzhled (uložený v DataStore, platí i pro mapu) a O aplikaci (verze, autor
+  s klikacím e-mailem – předmět v mailto URI kvůli Gmailu i v EXTRA_SUBJECT, zdroje dat, atribuce a licence).
 - Obrazovka Radar: celoobrazovková mapa, plovoucí lišta s časem zobrazeného snímku a menu Vrstvy
   (přepínač průhledného radaru), chip s nejbližším deštěm, FAB „Moje poloha“ (modrá tečka),
   spodní panel s přehráváním 13 snímků po 10 min, posuvníkem a legendou škály ČHMÚ.

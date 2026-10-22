@@ -267,15 +267,17 @@ private fun DayItem(
 ) {
     val stateText = stringResource(if (expanded) R.string.state_expanded else R.string.state_collapsed)
     val actionText = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand)
-    Column {
+    // Klepnutí kamkoli do dne (i do rozbaleného detailu) ho rozbalí / sbalí.
+    Column(
+        Modifier
+            .clickable(onClickLabel = actionText, onClick = onClick)
+            .semantics { stateDescription = stateText },
+    ) {
         DayRow(
             day = day,
             isTomorrow = isTomorrow,
             scaleMin = scaleMin,
             scaleMax = scaleMax,
-            modifier = Modifier
-                .clickable(onClickLabel = actionText, onClick = onClick)
-                .semantics(mergeDescendants = true) { stateDescription = stateText },
         )
         if (expanded) {
             val visible = remember { MutableTransitionState(false).apply { targetState = true } }
