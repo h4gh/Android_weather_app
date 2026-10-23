@@ -133,6 +133,7 @@
     <string name="legend_temperature">Teplota</string>
     <string name="legend_precipitation">Srážky</string>
     <string name="outlook_day_chart">Průběh dne</string>
+    <string name="outlook_overview_title">Přehled na 5 dní</string>
     <string name="wind_kmh">Vítr km/h</string>
     <string name="gusts_peak">Nárazy až %1$d km/h kolem %2$s h</string>
 
@@ -149,7 +150,6 @@
     <string name="trend_steady">stálý</string>
 
     <string name="outlook_title">Výhled na 5 dní</string>
-    <string name="outlook_subtitle">%1$s · vítr v km/h · ALADIN do 3 dnů, dále ECMWF</string>
     <string name="outlook_tomorrow">Zítra</string>
     <string name="outlook_less_certain">Obecnější předpověď (model ECMWF)</string>
     <string name="outlook_precip_mm">%1$s mm</string>

@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,12 +47,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -74,6 +80,7 @@ import cz.kisiala.pocasi.ui.common.message
 import cz.kisiala.pocasi.ui.theme.WeatherTheme
 import cz.kisiala.pocasi.ui.today.Meteogram
 import cz.kisiala.pocasi.ui.today.MeteogramLegend
+import cz.kisiala.pocasi.ui.today.OverviewMeteogram
 import cz.kisiala.pocasi.ui.today.STRONG_WIND_KMH
 import cz.kisiala.pocasi.ui.today.WeatherCard
 import cz.kisiala.pocasi.ui.today.WeatherIcon
@@ -83,6 +90,8 @@ import cz.kisiala.pocasi.ui.today.label
 import cz.kisiala.pocasi.ui.today.windDirectionName
 import java.time.LocalDate
 import kotlin.math.roundToInt
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 
 private const val OUTLOOK_DAYS = 5
 
@@ -135,9 +144,10 @@ fun OutlookScreen(
                     onRefresh = viewModel::refresh,
                     modifier = Modifier.fillMaxSize(),
                 ) {
+                    val days = forecast.outlook(OUTLOOK_DAYS)
                     OutlookContent(
-                        placeName = state.place?.name,
-                        days = forecast.outlook(OUTLOOK_DAYS),
+                        days = days,
+                        overviewHours = days.firstOrNull()?.let { forecast.hoursOf(it.date, days.size) }.orEmpty(),
                         hoursOf = forecast::hoursOf,
                     )
                 }
@@ -183,8 +193,8 @@ private fun OutlookTopBar(
 
 @Composable
 private fun OutlookContent(
-    placeName: String?,
     days: List<DailyWeather>,
+    overviewHours: List<HourlyWeather>,
     hoursOf: (LocalDate) -> List<HourlyWeather>,
 ) {
     // Rozbalený je nejvýš jeden den; výchozí je zítřek.
@@ -192,45 +202,145 @@ private fun OutlookContent(
     val scaleMin = days.minOfOrNull { it.temperatureMin } ?: 0.0
     val scaleMax = days.maxOfOrNull { it.temperatureMax } ?: 0.0
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
-            .padding(bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(
-            stringResource(R.string.outlook_subtitle, placeName.orEmpty()),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 4.dp),
-        )
-        // Rozbalený den má vlastní kartu, ostatní dny se sdružují do společných karet.
-        // Dny z modelu ECMWF jsou v samostatné skupině s decentním nadpisem.
-        dayGroups(days.size, expanded).forEach { group ->
-            if (group.first == ALADIN_DAYS) LessCertainLabel()
-            WeatherCard {
-                group.forEach { index ->
-                    if (index != group.first) {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                        )
+    val scrollState = rememberScrollState()
+    // Horní okraj každého dne v obsahu seznamu (px) – cíl posunu po klepnutí do přehledu.
+    val dayTops = remember { mutableMapOf<Int, Int>() }
+    var contentCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    var scrollRequest by remember { mutableStateOf<ScrollRequest?>(null) }
+    LaunchedEffect(scrollRequest) {
+        val request = scrollRequest ?: return@LaunchedEffect
+        // Počkat, až se rozbalený den rozvrhne, a pak ho dorolovat pod přehled.
+        repeat(2) { withFrameNanos { } }
+        val target = dayTops[request.day] ?: return@LaunchedEffect
+        // Rozbalování detailu teprve prodlužuje obsah – u posledních dní počkat, až půjde dorolovat.
+        withTimeoutOrNull(600) { snapshotFlow { scrollState.maxValue }.first { it >= target } }
+        scrollState.animateScrollTo(target)
+    }
+
+    Column(Modifier.fillMaxSize()) {
+        // Přehled je napevno nahoře a vždy otevřený; dny pod ním se rolují.
+        if (overviewHours.size >= 2) {
+            OverviewCard(
+                days = days,
+                hours = overviewHours,
+                selectedDay = expanded,
+                onDayClick = { index ->
+                    expanded = index
+                    scrollRequest = ScrollRequest(index)
+                },
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
+            )
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .onGloballyPositioned { contentCoordinates = it }
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            DayCards(
+                days = days,
+                expanded = expanded,
+                hoursOf = hoursOf,
+                scaleMin = scaleMin,
+                scaleMax = scaleMax,
+                onDayClick = { index -> expanded = if (expanded == index) null else index },
+                dayModifier = { index ->
+                    Modifier.onGloballyPositioned { coordinates ->
+                        contentCoordinates?.let { dayTops[index] = it.localPositionOf(coordinates, Offset.Zero).y.roundToInt() }
                     }
-                    key(days[index].date) {
-                        DayItem(
-                            day = days[index],
-                            hours = hoursOf(days[index].date),
-                            isTomorrow = index == 0,
-                            expanded = index == expanded,
-                            scaleMin = scaleMin,
-                            scaleMax = scaleMax,
-                            onClick = { expanded = if (expanded == index) null else index },
-                        )
-                    }
+                },
+            )
+        }
+    }
+}
+
+/** Žádost o posun seznamu na den – nová instance i při opakovaném klepnutí na stejný den. */
+private class ScrollRequest(val day: Int)
+
+@Composable
+private fun DayCards(
+    days: List<DailyWeather>,
+    expanded: Int?,
+    hoursOf: (LocalDate) -> List<HourlyWeather>,
+    scaleMin: Double,
+    scaleMax: Double,
+    onDayClick: (Int) -> Unit,
+    dayModifier: (Int) -> Modifier,
+) {
+    // Rozbalený den má vlastní kartu, ostatní dny se sdružují do společných karet.
+    // Dny z modelu ECMWF jsou v samostatné skupině s decentním nadpisem.
+    dayGroups(days.size, expanded).forEach { group ->
+        if (group.first == ALADIN_DAYS) LessCertainLabel()
+        WeatherCard {
+            group.forEach { index ->
+                if (index != group.first) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                    )
+                }
+                key(days[index].date) {
+                    DayItem(
+                        day = days[index],
+                        hours = hoursOf(days[index].date),
+                        isTomorrow = index == 0,
+                        expanded = index == expanded,
+                        scaleMin = scaleMin,
+                        scaleMax = scaleMax,
+                        onClick = { onDayClick(index) },
+                        modifier = dayModifier(index),
+                    )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Karta „Přehled na 5 dní“: teplota a srážky všech dní výhledu v jednom grafu, vždy otevřená.
+ * Klepnutí do úseku dne rozbalí jeho kartu v seznamu; rozbalený den je v grafu podbarvený.
+ */
+@Composable
+private fun OverviewCard(
+    days: List<DailyWeather>,
+    hours: List<HourlyWeather>,
+    selectedDay: Int?,
+    onDayClick: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val dayNames = stringArrayResource(R.array.day_short)
+    val tomorrow = stringResource(R.string.outlook_tomorrow)
+    val dayLabels = days.mapIndexed { i, day ->
+        if (i == 0) tomorrow else "${dayNames[day.date.dayOfWeek.value - 1]} ${day.date.dayOfMonth}."
+    }
+    WeatherCard(modifier) {
+        Column(Modifier.padding(16.dp)) {
+            Row(Modifier.heightIn(min = 32.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.outlook_overview_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f),
+                )
+                MeteogramLegend()
+            }
+            OverviewMeteogram(
+                hours = hours,
+                dayLabels = dayLabels,
+                selectedDay = selectedDay,
+                modifier = Modifier
+                    .padding(top = 12.dp)
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .pointerInput(days.size) {
+                        detectTapGestures { offset ->
+                            onDayClick((offset.x / size.width * days.size).toInt().coerceIn(0, days.lastIndex))
+                        }
+                    },
+            )
         }
     }
 }
@@ -265,12 +375,13 @@ private fun DayItem(
     scaleMin: Double,
     scaleMax: Double,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val stateText = stringResource(if (expanded) R.string.state_expanded else R.string.state_collapsed)
     val actionText = stringResource(if (expanded) R.string.action_collapse else R.string.action_expand)
     // Klepnutí kamkoli do dne (i do rozbaleného detailu) ho rozbalí / sbalí.
     Column(
-        Modifier
+        modifier
             .clickable(onClickLabel = actionText, onClick = onClick)
             .semantics { stateDescription = stateText },
     ) {

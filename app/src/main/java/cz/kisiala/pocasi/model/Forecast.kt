@@ -42,6 +42,13 @@ data class Forecast(
         return hourly.filter { it.time >= start && it.time <= end }
     }
 
+    /** Hodinové hodnoty [days] dní od půlnoci dne [from] (včetně půlnoci po posledním dni, je-li v datech). */
+    fun hoursOf(from: LocalDate, days: Int): List<HourlyWeather> {
+        val start = from.atStartOfDay()
+        val end = start.plusDays(days.toLong())
+        return hourly.filter { it.time >= start && it.time <= end }
+    }
+
     /** Tendence tlaku za poslední 3 hodiny (příp. následující, pokud data zpětně chybí). */
     val pressureTrend: PressureTrend by lazy {
         val now = hourly.getOrNull(currentHourIndex)?.pressure ?: return@lazy PressureTrend.Steady

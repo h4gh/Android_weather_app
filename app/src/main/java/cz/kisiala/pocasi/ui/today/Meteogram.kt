@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.model.HourlyWeather
 import cz.kisiala.pocasi.ui.theme.WeatherTheme
+import java.time.Duration
 import kotlin.math.roundToInt
 
 /** Počet sloupců (po 3 h) v ose i v řádku větru: 0, 3, … 24 h. */
@@ -226,6 +228,136 @@ fun DrawScope.drawMeteogram(
             label,
             topLeft = Offset(x(i) - label.size.width / 2f, size.height - label.size.height),
         )
+    }
+}
+
+/**
+ * Přehled několika dní ve stylu meteogramu (bez větru): hodinová křivka teploty s popisky max/min
+ * každého dne, srážky sloupci po 3 h, předěly o půlnoci a pod grafem [dayLabels] (jeden na den).
+ * [hours] začínají o půlnoci prvního dne.
+ */
+@Composable
+fun OverviewMeteogram(
+    hours: List<HourlyWeather>,
+    dayLabels: List<String>,
+    modifier: Modifier = Modifier,
+    selectedDay: Int? = null,
+) {
+    if (hours.size < 2 || dayLabels.isEmpty()) return
+    val style = MeteogramStyle(
+        temperature = WeatherTheme.colors.temperature,
+        heavyPrecip = MaterialTheme.colorScheme.primary,
+        lightPrecip = MaterialTheme.colorScheme.inversePrimary,
+        grid = MaterialTheme.colorScheme.outlineVariant,
+        axisText = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+        temperatureText = MaterialTheme.typography.labelMedium.copy(
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Medium,
+        ),
+    )
+    val textMeasurer = rememberTextMeasurer()
+    val highlight = MaterialTheme.colorScheme.secondaryContainer
+    Canvas(modifier) { drawOverviewMeteogram(hours, dayLabels, style, textMeasurer, selectedDay, highlight) }
+}
+
+/** Kreslení přehledu více dní – stejné barvy a rozvržení jako [drawMeteogram]; [selectedDay] je podbarvený. */
+fun DrawScope.drawOverviewMeteogram(
+    hours: List<HourlyWeather>,
+    dayLabels: List<String>,
+    style: MeteogramStyle,
+    textMeasurer: TextMeasurer,
+    selectedDay: Int? = null,
+    highlight: Color = Color.Transparent,
+) {
+    if (hours.size < 2 || dayLabels.isEmpty()) return
+    val start = hours.first().time
+    val totalHours = dayLabels.size * 24f
+    fun hourOf(h: HourlyWeather) = Duration.between(start, h.time).toHours()
+    // Poloha podle času (ne indexu) → půlnoci sedí na předělech, i když na konci data chybí.
+    fun x(h: HourlyWeather) = hourOf(h) / totalHours * size.width
+    val dayWidth = size.width / dayLabels.size
+
+    val axisLabelHeight = 18.dp.toPx()
+    val barsBottom = size.height - axisLabelHeight - 4.dp.toPx()
+    val barsMaxHeight = 28.dp.toPx()
+    val tempTop = 20.dp.toPx()
+    // Pod křivkou zbývá místo na popisky minim.
+    val tempBottom = barsBottom - 40.dp.toPx()
+
+    if (selectedDay != null && selectedDay in dayLabels.indices) {
+        drawRoundRect(
+            highlight,
+            topLeft = Offset(selectedDay * dayWidth, 0f),
+            size = Size(dayWidth, size.height),
+            cornerRadius = CornerRadius(8.dp.toPx()),
+        )
+    }
+
+    val gridYs = listOf(tempTop, (tempTop + barsBottom) / 2f - 6.dp.toPx(), barsBottom - 12.dp.toPx())
+    gridYs.forEach { y ->
+        drawLine(style.grid, Offset(0f, y), Offset(size.width, y), strokeWidth = 1.dp.toPx())
+    }
+    // Předěly dní o půlnoci.
+    for (d in 1 until dayLabels.size) {
+        drawLine(style.grid, Offset(d * dayWidth, 0f), Offset(d * dayWidth, barsBottom), strokeWidth = 1.dp.toPx())
+    }
+
+    // Srážky sečtené po 3 h (hodinové hodnoty jsou úhrny za předchozí hodinu).
+    val step3h = dayWidth / 8f
+    val buckets = hours.filter { hourOf(it) > 0 }
+        .groupBy { (hourOf(it) - 1) / 3 }
+        .mapValues { (_, list) -> list.sumOf { it.precipitation } }
+    val precipScale = maxOf(buckets.values.maxOrNull() ?: 0.0, PRECIP_SCALE_MIN_MM)
+    val barWidth = step3h * 0.7f
+    buckets.forEach { (bucket, mm) ->
+        if (mm < 0.05) return@forEach
+        val h = maxOf((mm / precipScale).toFloat() * barsMaxHeight, 3.dp.toPx())
+        val cx = (bucket + 0.5f) * step3h
+        drawRoundRect(
+            color = if (mm >= HEAVY_PRECIP_MM) style.heavyPrecip else style.lightPrecip,
+            topLeft = Offset(cx - barWidth / 2f, barsBottom - h),
+            size = Size(barWidth, h),
+            cornerRadius = CornerRadius(2.dp.toPx()),
+        )
+    }
+
+    val temps = hours.map { it.temperature }
+    val tMax = temps.max()
+    val tMin = temps.min()
+    val range = (tMax - tMin).takeIf { it > 0.5 } ?: 1.0
+    fun y(t: Double) = (tempBottom - (t - tMin) / range * (tempBottom - tempTop)).toFloat()
+    val points = hours.map { Offset(x(it), y(it.temperature)) }
+    drawPath(
+        monotoneCurve(points),
+        style.temperature,
+        style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+    )
+
+    // Popisky max (nad křivkou) a min (pod ní) každého dne – bez překryvů, maxima mají přednost.
+    val byDay = hours.indices
+        .filter { hourOf(hours[it]) < totalHours }
+        .groupBy { (hourOf(hours[it]) / 24).toInt() }
+        .values
+    val placed = mutableListOf<Rect>()
+    val gap = 4.dp.toPx()
+    fun label(i: Int, above: Boolean) {
+        val layout = textMeasurer.measure(formatTemperature(temps[i]), style.temperatureText)
+        val w = layout.size.width.toFloat()
+        val h = layout.size.height.toFloat()
+        val left = (points[i].x - w / 2f).coerceIn(0f, size.width - w)
+        val top = if (above) (points[i].y - h - gap).coerceAtLeast(0f) else points[i].y + gap
+        val rect = Rect(left, top, left + w, top + h)
+        if (placed.any { it.inflate(gap / 2f).overlaps(rect) }) return
+        placed += rect
+        drawText(layout, topLeft = Offset(left, top))
+    }
+    byDay.forEach { day -> label(day.maxBy { temps[it] }, above = true) }
+    byDay.forEach { day -> label(day.minBy { temps[it] }, above = false) }
+
+    // Popisky dní uprostřed jejich úseku.
+    dayLabels.forEachIndexed { d, text ->
+        val label = textMeasurer.measure(text, style.axisText)
+        drawText(label, topLeft = Offset((d + 0.5f) * dayWidth - label.size.width / 2f, size.height - label.size.height))
     }
 }
 

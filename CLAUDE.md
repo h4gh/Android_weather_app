@@ -8,7 +8,7 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
 1. **Dnes** – aktuální stav (teplota, popis, pocitová, max/min, ikona), karta „Nejbližší srážky“
    (z radaru), meteogram „Dalších 24 hodin“ (teplota křivkou, srážky sloupci, vítr po 3 h)
    a tři malé karty Vítr / Vlhkost / Tlak.
-2. **Výhled** – výhled na 5 dní od zítřka (rozbalitelný den s hodnotami po 3 h a chipy nárazy/vlhkost/tlak,
+2. **Výhled** – výhled na 5 dní od zítřka: nahoře napevno karta „Přehled na 5 dní“ (teplota křivkou, srážky po 3 h, klepnutí na den rozbalí a odroluje jeho kartu pod přehled), pod ní dny (rozbalitelný den s hodnotami po 3 h a chipy nárazy/vlhkost/tlak,
    srážky + pravděpodobnost, vítr, pruh min–max na společné stupnici; dny 4–5 označené jako ECMWF).
 3. **Radar** – mapa s radarovými kompozity ČHMÚ, animace posledních 2 h, nejbližší déšť.
 
@@ -107,6 +107,7 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
    4. Menu ⋮ – O aplikaci: název, verze, zdroje dat s atribucemi a licencemi ✅
    5. O aplikaci – autor Ondřej Kisiala, klikací kontakt o.kisiala@gmail.com (připomínky, návrhy, žádosti o update) ✅
    6. Výhled – rozbalený den se sbalí klepnutím kamkoli do jeho otevřené karty (nejen na hlavičku) ✅
+   7. Výhled – připnutá karta „Přehled na 5 dní“ (teplota + srážky, bez větru), klepnutím na den v grafu se rozbalí jeho karta a odroluje pod přehled; odebrán podnadpis s místem, jednotkami a modely ✅
 5. **Oblíbená místa** – dva kroky, po každém build + instalace release, potvrzení, commit:
    1. ✅ Vyhledávání míst: lupa na Dnes (a „Přidat místo…“ v menu míst) otevře hledání přes Open-Meteo Geocoding
       (Česko a okolní státy, výsledky z Česka první); výběr místa → předpověď. Radar: tečka a nejbližší déšť
