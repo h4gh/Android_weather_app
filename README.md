@@ -5,9 +5,9 @@ a postavená na Material Design 3 (Material You, světlý i tmavý režim).
 
 | Dnes | Výhled | Radar |
 |---|---|---|
-| ![Dnes](design/1%20·%20Dnes.png) | ![Výhled](design/2%20·%20Výhled.png) | ![Radar](design/3%20·%20Radar.png) |
+| ![Dnes](docs/screenshots/dnes.png) | ![Výhled](docs/screenshots/vyhled.png) | ![Radar](docs/screenshots/radar.png) |
 
-*Návrhy obrazovek ze složky `design/`.*
+*Snímky z aplikace (tmavý režim, Google Pixel 10 Pro XL).*
 
 ## Funkce
 
