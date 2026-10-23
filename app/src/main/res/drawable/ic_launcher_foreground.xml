@@ -4,23 +4,12 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- slunce -->
+    <!-- slunce: jen část nad mrakem (s mezerou 1,5), aby se v monochromu neslilo s mrakem -->
     <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FF9C4323"
-        android:strokeWidth="3.5"
-        android:pathData="M46,46m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0" />
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FF9C4323"
-        android:strokeWidth="3.5"
-        android:strokeLineCap="round"
-        android:pathData="M46,28L46,32M28,46L32,46M33.3,33.3L36.1,36.1M58.7,33.3L55.9,36.1M33.3,58.7L36.1,55.9" />
+        android:fillColor="#FFFFB06B"
+        android:pathData="M53.14,43.89A13,13 0,1 1,73.5 52.6A12.5,12.5 0,0 0,72.94 52.53A17.5,17.5 0,0 0,53.14 43.89Z" />
     <!-- mrak -->
     <path
-        android:fillColor="#FFD6E3FF"
-        android:strokeColor="#FF284777"
-        android:strokeWidth="3.5"
-        android:strokeLineJoin="round"
-        android:pathData="M48,74L74,74A9,9 0,0 0,74 56A13,13 0,0 0,49 58A8,8 0,0 0,48 74Z" />
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M32,76L72,76A11,11 0,0 0,72 54A16,16 0,0 0,42 57A11,11 0,0 0,32 76Z" />
 </vector>
