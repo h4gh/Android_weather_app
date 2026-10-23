@@ -19,6 +19,9 @@ interface OpenMeteoApi {
         @Query("current", encoded = true) current: String = VARIABLES,
         @Query("hourly", encoded = true) hourly: String = VARIABLES,
         @Query("daily", encoded = true) daily: String = DAILY_VARIABLES,
+        /** Srážky po 15 min (jen pro upozornění – rada k deštníku na příští hodinu); `null` = nestahovat. */
+        @Query("minutely_15") minutely15: String? = null,
+        @Query("forecast_minutely_15") forecastMinutely15: Int? = null,
     ): ForecastResponse
 
     companion object {

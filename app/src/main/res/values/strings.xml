@@ -180,4 +180,67 @@
     <string name="cond_rain">Déšť</string>
     <string name="cond_heavy_rain">Silný déšť</string>
     <string name="cond_snow">Sněžení</string>
+
+    <string name="menu_notifications">Upozornění</string>
+    <string name="notif_channel_name">Počasí v nastavený čas</string>
+    <string name="notif_channel_description">Aktuální počasí a rada, zda si vzít deštník, v časech nastavených v aplikaci</string>
+    <string name="notif_title">%1$s %2$s · %3$s</string>
+    <string name="notif_raining_now">Právě prší – vezměte si deštník.</string>
+    <string name="notif_snowing_now">Právě sněží.</string>
+    <string name="notif_rain_likely">Do hodiny může pršet – deštník se bude hodit.</string>
+    <string name="notif_snow_likely">Do hodiny může sněžit.</string>
+    <string name="notif_umbrella_not_needed">Deštník v příští hodině potřeba nebude.</string>
+    <string name="notif_radar_found">Radar %1$s: %2$s %3$d km %4$s.</string>
+    <string name="notif_radar_none">Radar %1$s: do %2$d km neprší.</string>
+    <string name="notif_rain_later">Později dnes srážky kolem %1$s.</string>
+    <string name="notif_temperatures">Dnes max %1$s, min %2$s · pocitově teď %3$s</string>
+    <string name="notif_error">Předpověď se teď nepodařilo načíst – zkontrolujte připojení.</string>
+
+    <string name="notif_settings_intro">V nastavené časy přijde upozornění s aktuálním počasím a radou, zda si vzít deštník – podle radaru ČHMÚ a předpovědi srážek na příští hodinu.</string>
+    <string name="notif_settings_place">Místo</string>
+    <string name="notif_settings_times">Časy</string>
+    <string name="notif_settings_empty">Zatím nemáte nastavený žádný čas.</string>
+    <string name="notif_settings_add">Přidat čas</string>
+    <string name="notif_settings_test">Poslat ukázku hned</string>
+    <string name="notif_settings_delete">Smazat čas</string>
+    <string name="notif_settings_no_days">Vyberte alespoň jeden den</string>
+    <string name="notif_settings_next">Příště %1$s</string>
+    <string name="notif_settings_today">dnes v %1$s</string>
+    <string name="notif_settings_tomorrow">zítra v %1$s</string>
+    <string name="notif_settings_on_day">%1$s v %2$s</string>
+    <string name="notif_settings_blocked">Upozornění jsou pro aplikaci vypnutá.</string>
+    <string name="notif_settings_allow">Povolit</string>
+    <string name="notif_settings_inexact">Bez oprávnění k přesnému času může upozornění přijít o pár minut později.</string>
+    <string name="notif_settings_location_known">Moje poloha (naposledy %1$s)</string>
+    <string name="notif_settings_location_hint">Poloha se bere z posledního otevření aplikace.</string>
+    <string name="notif_settings_pick_time">Čas upozornění</string>
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Zrušit</string>
+    <string-array name="weekday_short">
+        <item>Po</item>
+        <item>Út</item>
+        <item>St</item>
+        <item>Čt</item>
+        <item>Pá</item>
+        <item>So</item>
+        <item>Ne</item>
+    </string-array>
+    <string-array name="weekday_on">
+        <item>v pondělí</item>
+        <item>v úterý</item>
+        <item>ve středu</item>
+        <item>ve čtvrtek</item>
+        <item>v pátek</item>
+        <item>v sobotu</item>
+        <item>v neděli</item>
+    </string-array>
+    <string-array name="weekday_full">
+        <item>pondělí</item>
+        <item>úterý</item>
+        <item>středa</item>
+        <item>čtvrtek</item>
+        <item>pátek</item>
+        <item>sobota</item>
+        <item>neděle</item>
+    </string-array>
 </resources>

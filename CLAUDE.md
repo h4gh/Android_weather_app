@@ -58,6 +58,13 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
     `WidgetUpdater` + `WidgetState` (místo a poslední data v Glance stavu, obnova jen když jsou data starší
     než 25 min), `WidgetDrawing` (bitmapy ze sdíleného kreslení). „Moje poloha“ = poslední poloha z aplikace
     (`PlaceStore.lastLocation`); `AppContainer` po nové poloze obnoví widgety s polohou, po změně vzhledu je překreslí.
+  - `notifications/` – upozornění s počasím v nastavené časy: `NotificationScheduler` (vždy jeden budík AlarmManageru
+    na nejbližší čas, přesný jen s oprávněním; `AppContainer` přeplánuje po každé změně nastavení),
+    `NotificationAlarmReceiver` (goAsync: předpověď + radar → upozornění, další budík), `NotificationRescheduleReceiver`
+    (restart, aktualizace, změna času), `WeatherNotifier` (obsah, kanál `scheduled_forecast`). Rada k deštníku
+    `model/UmbrellaAdvice` z radaru (v místě / do 10 km) a srážek po 15 min (`minutely_15`, jen pro upozornění).
+    Nastavení (`NotificationSettings`: časy s dny v týdnu, místo) v `SettingsRepository`; obrazovka
+    `ui/notifications/NotificationSettingsScreen` z menu ⋮ → Upozornění.
 - Každá obrazovka má vlastní top app bar (vnořený `Scaffold`), vnější `Scaffold` řeší jen Navigation Bar.
 
 ## Pravidla designu
@@ -119,7 +126,8 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
       od 4×2 navíc meteogram na 24 h. Ikony a meteogram se kreslí stejným kódem jako v aplikaci (DrawScope do
       bitmapy). Místo se volí při přidání widgetu (Moje poloha / oblíbené / hledat), obnova po 30 min,
       klepnutí otevře aplikaci na Dnes.
-   2. Widget „Výhled na 5 dní“ (4×2): krátce aktuální stav + 5 dní (den, ikona, max/min, srážky), stejná volba místa.
+. ✅ **Upozornění s počasím** – menu ⋮ → Upozornění: místo (Moje poloha / oblíbené), libovolné časy s dny v týdnu;
+   upozornění = teplota, stav, rada k deštníku na příští hodinu (radar + předpověď), později dnes srážky, max/min.
 
 ## Stav
 

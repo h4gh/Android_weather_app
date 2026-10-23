@@ -11,6 +11,8 @@ data class Forecast(
     val hourly: List<HourlyWeather>,
     /** Denní souhrny od dneška (dnešek + 5 dní). */
     val daily: List<DailyWeather> = emptyList(),
+    /** Srážky po 15 min na nejbližší hodiny – jen když se o ně požádá (upozornění). */
+    val quarterHours: List<QuarterHour> = emptyList(),
 ) {
     /** Index hodiny odpovídající aktuálnímu stavu. */
     private val currentHourIndex: Int by lazy {
@@ -104,6 +106,9 @@ data class HourlyWeather(
     val condition: WeatherCondition
         get() = WeatherCondition.from(cloudCover ?: 0, precipitation, temperature)
 }
+
+/** Úhrn srážek [precipitation] (mm) za 15 minut končících časem [time]. */
+data class QuarterHour(val time: LocalDateTime, val precipitation: Double)
 
 enum class PressureTrend { Rising, Falling, Steady }
 

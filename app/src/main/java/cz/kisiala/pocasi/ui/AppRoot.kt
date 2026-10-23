@@ -40,6 +40,7 @@ import cz.kisiala.pocasi.ui.about.AboutScreen
 import cz.kisiala.pocasi.ui.common.AppMenuActions
 import cz.kisiala.pocasi.ui.common.AppearanceDialog
 import cz.kisiala.pocasi.ui.favorites.FavoritesScreen
+import cz.kisiala.pocasi.ui.notifications.NotificationSettingsScreen
 import cz.kisiala.pocasi.ui.outlook.OutlookScreen
 import cz.kisiala.pocasi.ui.radar.RadarScreen
 import cz.kisiala.pocasi.ui.radar.RadarViewModel
@@ -74,11 +75,13 @@ fun AppRoot(container: AppContainer) {
     // Menu ⋮ je na všech obrazovkách, dialogy zobrazuje AppRoot.
     var showAppearance by rememberSaveable { mutableStateOf(false) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
+    var showNotifications by rememberSaveable { mutableStateOf(false) }
     var showSearch by rememberSaveable { mutableStateOf(false) }
     var showFavorites by rememberSaveable { mutableStateOf(false) }
     val menuActions = remember {
         AppMenuActions(
             onAppearance = { showAppearance = true },
+            onNotifications = { showNotifications = true },
             onAbout = { showAbout = true },
             onSearchPlace = { showSearch = true },
             onEditFavorites = { showFavorites = true },
@@ -94,6 +97,7 @@ fun AppRoot(container: AppContainer) {
         )
     }
     if (showAbout) AboutScreen(onClose = { showAbout = false })
+    if (showNotifications) NotificationSettingsScreen(container, onClose = { showNotifications = false })
     if (showFavorites) {
         FavoritesScreen(
             places = container.placeRepository,

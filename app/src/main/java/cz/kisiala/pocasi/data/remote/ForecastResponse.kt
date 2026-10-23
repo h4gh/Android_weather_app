@@ -11,6 +11,14 @@ data class ForecastResponse(
     val current: CurrentDto,
     val hourly: HourlyDto,
     val daily: DailyDto? = null,
+    @SerialName("minutely_15") val minutely15: Minutely15Dto? = null,
+)
+
+/** Srážky po 15 min; hodnota u času je úhrn za předchozích 15 minut. */
+@Serializable
+data class Minutely15Dto(
+    val time: List<String>,
+    val precipitation: List<Double?> = emptyList(),
 )
 
 @Serializable

@@ -4,6 +4,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Upozornění v nastavený čas na minutu přesně; bez oprávnění je systém může o pár minut posunout. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
         android:name=".PocasiApp"
@@ -57,6 +61,22 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_outlook_info" />
+        </receiver>
+        <!-- Upozornění s počasím: budík v nastavený čas a nové naplánování po restartu / změně času. -->
+        <receiver
+            android:name=".notifications.NotificationAlarmReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".notifications.NotificationRescheduleReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
         </receiver>
     </application>
 </manifest>

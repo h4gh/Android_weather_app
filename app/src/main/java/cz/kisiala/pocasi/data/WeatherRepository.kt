@@ -7,6 +7,7 @@ import cz.kisiala.pocasi.model.DailyWeather
 import cz.kisiala.pocasi.model.Forecast
 import cz.kisiala.pocasi.model.HourlyWeather
 import cz.kisiala.pocasi.model.Place
+import cz.kisiala.pocasi.model.QuarterHour
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -14,6 +15,15 @@ class WeatherRepository(private val api: OpenMeteoApi) {
 
     suspend fun forecast(place: Place): Forecast =
         api.forecast(latitude = place.latitude, longitude = place.longitude).toForecast()
+
+    /** Předpověď i se srážkami po 15 min na ~2 h dopředu (pro upozornění). */
+    suspend fun forecastWithNowcast(place: Place): Forecast =
+        api.forecast(
+            latitude = place.latitude,
+            longitude = place.longitude,
+            minutely15 = "precipitation",
+            forecastMinutely15 = 9,
+        ).toForecast()
 }
 
 internal fun ForecastResponse.toForecast(): Forecast {
@@ -68,5 +78,8 @@ internal fun ForecastResponse.toForecast(): Forecast {
             hours = hours.filter { it.time.toLocalDate() == date },
         )
     }.orEmpty()
-    return Forecast(current = currentWeather, hourly = hours, daily = days)
+    val quarters = minutely15?.let { m ->
+        m.time.indices.map { i -> QuarterHour(LocalDateTime.parse(m.time[i]), m.precipitation.getOrNull(i) ?: 0.0) }
+    }.orEmpty()
+    return Forecast(current = currentWeather, hourly = hours, daily = days, quarterHours = quarters)
 }

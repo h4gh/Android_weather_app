@@ -10,6 +10,7 @@ import cz.kisiala.pocasi.data.location.LocationProvider
 import cz.kisiala.pocasi.data.radar.RadarRepository
 import cz.kisiala.pocasi.data.remote.GeocodingApi
 import cz.kisiala.pocasi.data.remote.OpenMeteoApi
+import cz.kisiala.pocasi.notifications.NotificationScheduler
 import cz.kisiala.pocasi.widget.WidgetUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -78,6 +79,10 @@ class AppContainer(context: Context) {
                 .distinctUntilChanged()
                 .drop(1)
                 .collect { WidgetUpdater.refreshAll(appContext, onlyCurrentLocation = true) }
+        }
+        // Každá změna časů upozornění (i první načtení po startu) přeplánuje budík.
+        appScope.launch {
+            settingsRepository.notifications.distinctUntilChanged().collect { NotificationScheduler.reschedule(appContext) }
         }
         // Změna vzhledu v aplikaci platí i pro widgety.
         appScope.launch {

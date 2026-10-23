@@ -36,12 +36,13 @@ import cz.kisiala.pocasi.model.ThemeMode
 /** Akce společné pro všechny obrazovky – menu ⋮ a hledání místa (dialogy otevírá `AppRoot`). */
 class AppMenuActions(
     val onAppearance: () -> Unit,
+    val onNotifications: () -> Unit,
     val onAbout: () -> Unit,
     val onSearchPlace: () -> Unit,
     val onEditFavorites: () -> Unit,
 )
 
-/** Tlačítko ⋮ s menu Vzhled / O aplikaci. */
+/** Tlačítko ⋮ s menu Vzhled / Upozornění / O aplikaci. */
 @Composable
 fun AppOverflowMenu(actions: AppMenuActions) {
     var open by remember { mutableStateOf(false) }
@@ -55,6 +56,13 @@ fun AppOverflowMenu(actions: AppMenuActions) {
                 onClick = {
                     open = false
                     actions.onAppearance()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.menu_notifications)) },
+                onClick = {
+                    open = false
+                    actions.onNotifications()
                 },
             )
             DropdownMenuItem(
