@@ -1,6 +1,7 @@
 package cz.kisiala.pocasi.widget
 
 import android.appwidget.AppWidgetManager
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -42,6 +43,7 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import cz.kisiala.pocasi.R
+import cz.kisiala.pocasi.data.AppLocales
 import cz.kisiala.pocasi.model.Place
 import cz.kisiala.pocasi.ui.search.PlaceSearchScreen
 import cz.kisiala.pocasi.ui.theme.PocasiTheme
@@ -58,6 +60,10 @@ class WidgetConfigActivity : ComponentActivity() {
     private val appWidgetId by lazy {
         intent?.extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
             ?: AppWidgetManager.INVALID_APPWIDGET_ID
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLocales.wrap(newBase))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

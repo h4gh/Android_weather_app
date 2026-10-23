@@ -1,6 +1,7 @@
 package cz.kisiala.pocasi
 
 import android.content.Context
+import cz.kisiala.pocasi.data.AppLocales
 import cz.kisiala.pocasi.data.PlaceRepository
 import cz.kisiala.pocasi.data.PlaceSearchRepository
 import cz.kisiala.pocasi.data.PlaceStore
@@ -53,7 +54,7 @@ class AppContainer(context: Context) {
         .build()
         .create(GeocodingApi::class.java)
 
-    val placeSearchRepository = PlaceSearchRepository(geocodingApi)
+    val placeSearchRepository = PlaceSearchRepository(geocodingApi) { AppLocales.contentLanguage(context) }
 
     val settingsRepository = SettingsRepository(context)
 
@@ -67,7 +68,7 @@ class AppContainer(context: Context) {
         locationProvider = locationProvider,
         store = PlaceStore(context),
         scope = appScope,
-        myLocationLabel = context.getString(R.string.place_my_location),
+        myLocationLabel = { context.getString(R.string.place_my_location) },
     )
 
     init {

@@ -38,9 +38,9 @@ object WeatherNotifier {
     private const val NOTIFICATION_ID = 1
     private val HOUR = DateTimeFormatter.ofPattern("H:mm")
 
+    /** Vytvoří kanál; u existujícího jen přeloží název a popis (po změně jazyka). */
     fun ensureChannel(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
-        if (manager.getNotificationChannel(CHANNEL_ID) != null) return
         manager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_ID,

@@ -20,8 +20,8 @@ android {
         applicationId = "cz.kisiala.pocasi"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
     }
 
     signingConfigs {
@@ -55,6 +55,13 @@ android {
     // za cenu rozbalení při instalaci (v telefonu zabere o pár MB víc).
     packaging {
         jniLibs { useLegacyPackaging = true }
+    }
+
+    // Aplikace je česky a anglicky – bez překladů knihoven (AndroidX, Material) do desítek dalších jazyků.
+    // Seznam jazyků pro systémovou volbu jazyka aplikace (Android 13+) se generuje z res/ (výchozí = cs).
+    androidResources {
+        localeFilters += listOf("cs", "en")
+        generateLocaleConfig = true
     }
 
     buildFeatures {

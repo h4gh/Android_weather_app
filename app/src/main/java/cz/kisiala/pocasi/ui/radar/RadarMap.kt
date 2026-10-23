@@ -19,6 +19,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import cz.kisiala.pocasi.data.AppLocales
 import cz.kisiala.pocasi.model.Place
 import cz.kisiala.pocasi.model.RadarGrid
 import kotlinx.coroutines.flow.Flow
@@ -89,7 +90,7 @@ fun RadarMap(
         }
         // Přidání observeru přehraje ON_START/ON_RESUME podle aktuálního stavu.
         lifecycle.addObserver(observer)
-        mapView.getMapAsync { controller = RadarMapController(it) }
+        mapView.getMapAsync { controller = RadarMapController(it, AppLocales.contentLanguage(context)) }
         onDispose {
             lifecycle.removeObserver(observer)
             val state = lifecycle.currentState
@@ -113,7 +114,7 @@ fun RadarMap(
 data class DotColors(val dot: Color, val ring: Color, val halo: Color)
 
 /** Vrstvy na mapě; po změně stylu (světlý ↔ tmavý) je přidá znovu s posledními hodnotami. */
-private class RadarMapController(private val map: MapLibreMap) {
+private class RadarMapController(private val map: MapLibreMap, private val labelLanguage: String) {
     private var style: Style? = null
     private var styleUrl: String? = null
     private var radarImage: Bitmap? = null
@@ -136,7 +137,7 @@ private class RadarMapController(private val map: MapLibreMap) {
         style = null
         map.setStyle(Style.Builder().fromUri(url)) { loaded ->
             style = loaded
-            useCzechLabels(loaded)
+            useLocalizedLabels(loaded)
             addRadarLayer(loaded)
             addLocationLayers(loaded)
             applyRadar()
@@ -274,16 +275,16 @@ private class RadarMapController(private val map: MapLibreMap) {
         )
     }
 
-    /** OpenFreeMap má popisky primárně anglicky („Prague“) – přepneme na české názvy. */
-    private fun useCzechLabels(style: Style) {
-        val czech = Expression.coalesce(
-            Expression.get("name:cs"),
+    /** Popisky OpenFreeMap v jazyce aplikace („Praha“, anglicky „Prague“); bez překladu místní název. */
+    private fun useLocalizedLabels(style: Style) {
+        val localized = Expression.coalesce(
+            Expression.get("name:$labelLanguage"),
             Expression.get("name:latin"),
             Expression.get("name"),
         )
         style.layers.filterIsInstance<SymbolLayer>().forEach { layer ->
             val field = runCatching { layer.textField.expression?.toString() }.getOrNull() ?: return@forEach
-            if ("name" in field) layer.setProperties(PropertyFactory.textField(czech))
+            if ("name" in field) layer.setProperties(PropertyFactory.textField(localized))
         }
     }
 

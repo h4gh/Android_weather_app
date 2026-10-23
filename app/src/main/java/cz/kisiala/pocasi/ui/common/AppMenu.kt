@@ -31,18 +31,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import cz.kisiala.pocasi.R
+import cz.kisiala.pocasi.model.AppLanguage
 import cz.kisiala.pocasi.model.ThemeMode
 
 /** Akce společné pro všechny obrazovky – menu ⋮ a hledání místa (dialogy otevírá `AppRoot`). */
 class AppMenuActions(
     val onAppearance: () -> Unit,
+    val onLanguage: () -> Unit,
     val onNotifications: () -> Unit,
     val onAbout: () -> Unit,
     val onSearchPlace: () -> Unit,
     val onEditFavorites: () -> Unit,
 )
 
-/** Tlačítko ⋮ s menu Vzhled / Upozornění / O aplikaci. */
+/** Tlačítko ⋮ s menu Vzhled / Jazyk / Upozornění / O aplikaci. */
 @Composable
 fun AppOverflowMenu(actions: AppMenuActions) {
     var open by remember { mutableStateOf(false) }
@@ -56,6 +58,13 @@ fun AppOverflowMenu(actions: AppMenuActions) {
                 onClick = {
                     open = false
                     actions.onAppearance()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.menu_language)) },
+                onClick = {
+                    open = false
+                    actions.onLanguage()
                 },
             )
             DropdownMenuItem(
@@ -88,27 +97,64 @@ private val ThemeMode.label: Int
 @Composable
 fun AppearanceDialog(selected: ThemeMode, onSelect: (ThemeMode) -> Unit, onDismiss: () -> Unit) {
     // Pořadí jako v zadání: Světlý / Tmavý / Podle systému.
-    val options = listOf(ThemeMode.Light, ThemeMode.Dark, ThemeMode.System)
+    ChoiceDialog(
+        title = stringResource(R.string.menu_appearance),
+        options = listOf(ThemeMode.Light, ThemeMode.Dark, ThemeMode.System),
+        selected = selected,
+        label = { stringResource(it.label) },
+        onSelect = onSelect,
+        onDismiss = onDismiss,
+    )
+}
+
+/** Výběr jazyka – názvy jazyků vždy v daném jazyce, ať je pozná i ten, kdo nerozumí aktuálnímu. */
+@Composable
+fun LanguageDialog(selected: AppLanguage, onSelect: (AppLanguage) -> Unit, onDismiss: () -> Unit) {
+    ChoiceDialog(
+        title = stringResource(R.string.menu_language),
+        options = listOf(AppLanguage.Czech, AppLanguage.English, AppLanguage.System),
+        selected = selected,
+        label = {
+            when (it) {
+                AppLanguage.Czech -> "Čeština"
+                AppLanguage.English -> "English"
+                AppLanguage.System -> stringResource(R.string.language_system)
+            }
+        },
+        onSelect = onSelect,
+        onDismiss = onDismiss,
+    )
+}
+
+@Composable
+private fun <T> ChoiceDialog(
+    title: String,
+    options: List<T>,
+    selected: T,
+    label: @Composable (T) -> String,
+    onSelect: (T) -> Unit,
+    onDismiss: () -> Unit,
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.menu_appearance)) },
+        title = { Text(title) },
         text = {
             Column(Modifier.selectableGroup()) {
-                options.forEach { mode ->
+                options.forEach { option ->
                     Row(
                         Modifier
                             .fillMaxWidth()
                             .heightIn(min = 48.dp)
                             .selectable(
-                                selected = mode == selected,
-                                onClick = { onSelect(mode) },
+                                selected = option == selected,
+                                onClick = { onSelect(option) },
                                 role = Role.RadioButton,
                             ),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        RadioButton(selected = mode == selected, onClick = null)
+                        RadioButton(selected = option == selected, onClick = null)
                         Text(
-                            stringResource(mode.label),
+                            label(option),
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.padding(start = 16.dp),
                         )

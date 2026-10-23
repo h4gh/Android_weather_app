@@ -23,7 +23,7 @@ class PlaceRepository(
     private val locationProvider: LocationProvider,
     private val store: PlaceStore,
     private val scope: CoroutineScope,
-    private val myLocationLabel: String,
+    private val myLocationLabel: () -> String,
 ) {
     private val currentLocationPlace = MutableStateFlow<Place?>(null)
     /** Vybrané místo z vyhledávání, které není v oblíbených (v menu míst, dokud je vybrané). */
@@ -137,14 +137,14 @@ class PlaceRepository(
         val previousName = currentLocationPlace.value?.name
         currentLocationPlace.value = Place(
             id = Place.CURRENT_LOCATION_ID,
-            name = previousName ?: myLocationLabel,
+            name = previousName ?: myLocationLabel(),
             latitude = location.latitude,
             longitude = location.longitude,
             kind = Place.Kind.CurrentLocation,
         )
         locationResolved.value = true
         val name = runCatching { locationProvider.placeName(location.latitude, location.longitude) }.getOrNull()
-        currentLocationPlace.value = currentLocationPlace.value?.copy(name = name ?: myLocationLabel)
+        currentLocationPlace.value = currentLocationPlace.value?.copy(name = name ?: myLocationLabel())
         // Pro widgety s „Moje poloha“ – ty polohu na pozadí nezjišťují (bez oprávnění „Povolit vždy“).
         currentLocationPlace.value?.let { store.setLastLocation(it) }
     }

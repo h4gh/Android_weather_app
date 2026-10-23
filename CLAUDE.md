@@ -1,7 +1,7 @@
 # Počasí – Android aplikace s předpovědí pro ČR
 
 Nativní Android aplikace s předpovědí počasí pro Českou republiku z dat ČHMÚ.
-UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 11 (Android Studio).
+UI je česky a anglicky (menu ⋮ → Jazyk). Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 11 (Android Studio).
 
 ## Obrazovky (spodní Navigation Bar)
 
@@ -76,7 +76,7 @@ UI je česky. Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 
 - Tónované karty `surfaceContainer`, rohy 12 dp (`WeatherCard`), typografie M3, dotykové plochy ≥ 48 dp.
 - Teplota (a zvýraznění silného větru ≥ 20 km/h) teplou oranžovou `WeatherTheme.colors.temperature`,
   srážky barvou `primary` (slabé srážky `inversePrimary`).
-- Texty v `res/values/strings.xml`, česky.
+- Texty v `res/values/strings.xml` česky (výchozí) a `res/values-en/strings.xml` anglicky – každý nový text do obou. Jazyk drží `data/AppLocales` (Android 13+ systémový per-app jazyk, starší SharedPreferences); vyhledávání, geokodér a popisky mapy berou jazyk z `R.string.content_language`.
 
 ## Zdroje dat
 
@@ -163,6 +163,9 @@ Zbývá / známá omezení:
 - Release je jen pro `arm64-v8a` a s komprimovanými nativními knihovnami (MapLibre) → APK ~7 MB. Kopie k rozeslání
   se srozumitelným názvem: `app/build/outputs/share/app-pocasi_release.apk`. Do telefonu:
   `adb install -r app/build/outputs/apk/release/app-release.apk`.
+- Verze: `versionName`/`versionCode` v `app/build.gradle.kts`. Před vydáním nové verze zvýšit `versionCode` o 1
+  (jinak Android aktualizaci odmítne) a `versionName` (MAJOR.MINOR.PATCH). Vydané APK se nahrává na Google Drive
+  `G:/My Drive/03_Development/Android_release/` jako `Pocasi-v<versionName>.apk`.
 - Release build (`assembleRelease`) je s R8 a podepsaný vlastním klíčem `C:/Users/ondre/keys/pocasi-release.jks`
   (alias `pocasi`). Cesta a hesla jsou v `keystore.properties` v kořeni projektu – **není v gitu**.
   Bez tohoto souboru vznikne nepodepsané APK. Debug build dál používá debug klíč – release a debug

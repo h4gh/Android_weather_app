@@ -1,9 +1,13 @@
 package cz.kisiala.pocasi.ui.today
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringArrayResource
 import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.model.PressureTrend
 import cz.kisiala.pocasi.model.WeatherCondition
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 import kotlin.math.roundToInt
 
 /** Od této rychlosti (km/h) zvýrazňujeme vítr. */
@@ -11,17 +15,19 @@ const val STRONG_WIND_KMH = 20
 
 fun formatTemperature(celsius: Double): String = "${celsius.roundToInt()}°"
 
-/** Srážky v mm s českou desetinnou čárkou: „4,2“, „0,5“, celá čísla bez desetin („2“, „0“). */
+/**
+ * Srážky v mm s desetinným oddělovačem jazyka aplikace: „4,2“ (anglicky „4.2“), celá čísla bez desetin („2“, „0“).
+ */
 fun formatPrecipitation(mm: Double): String {
     val tenths = (mm * 10).roundToInt()
-    return if (tenths % 10 == 0) (tenths / 10).toString() else "${tenths / 10},${tenths % 10}"
+    val separator = DecimalFormatSymbols.getInstance(Locale.getDefault()).decimalSeparator
+    return if (tenths % 10 == 0) (tenths / 10).toString() else "${tenths / 10}$separator${tenths % 10}"
 }
 
-/** Směr, odkud vítr vane, česky (S, SV, V, JV, J, JZ, Z, SZ). */
-fun windDirectionName(degrees: Int): String {
-    val names = arrayOf("S", "SV", "V", "JV", "J", "JZ", "Z", "SZ")
-    return names[(((degrees % 360) + 360) % 360 + 22) / 45 % 8]
-}
+/** Směr, odkud vítr vane (S, SV, V, JV, J, JZ, Z, SZ; anglicky N, NE, …). */
+@Composable
+fun windDirectionName(degrees: Int): String =
+    stringArrayResource(R.array.wind_direction_short)[(((degrees % 360) + 360) % 360 + 22) / 45 % 8]
 
 @get:StringRes
 val WeatherCondition.label: Int

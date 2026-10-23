@@ -1,6 +1,7 @@
 package cz.kisiala.pocasi.ui
 
 import android.Manifest
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
@@ -23,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -35,10 +37,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cz.kisiala.pocasi.AppContainer
 import cz.kisiala.pocasi.R
+import cz.kisiala.pocasi.data.AppLocales
 import cz.kisiala.pocasi.model.ThemeMode
 import cz.kisiala.pocasi.ui.about.AboutScreen
 import cz.kisiala.pocasi.ui.common.AppMenuActions
 import cz.kisiala.pocasi.ui.common.AppearanceDialog
+import cz.kisiala.pocasi.ui.common.LanguageDialog
 import cz.kisiala.pocasi.ui.favorites.FavoritesScreen
 import cz.kisiala.pocasi.ui.notifications.NotificationSettingsScreen
 import cz.kisiala.pocasi.ui.outlook.OutlookScreen
@@ -75,12 +79,14 @@ fun AppRoot(container: AppContainer) {
     // Menu ⋮ je na všech obrazovkách, dialogy zobrazuje AppRoot.
     var showAppearance by rememberSaveable { mutableStateOf(false) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
+    var showLanguage by rememberSaveable { mutableStateOf(false) }
     var showNotifications by rememberSaveable { mutableStateOf(false) }
     var showSearch by rememberSaveable { mutableStateOf(false) }
     var showFavorites by rememberSaveable { mutableStateOf(false) }
     val menuActions = remember {
         AppMenuActions(
             onAppearance = { showAppearance = true },
+            onLanguage = { showLanguage = true },
             onNotifications = { showNotifications = true },
             onAbout = { showAbout = true },
             onSearchPlace = { showSearch = true },
@@ -94,6 +100,19 @@ fun AppRoot(container: AppContainer) {
             selected = themeMode,
             onSelect = { container.appScope.launch { settings.setThemeMode(it) } },
             onDismiss = { showAppearance = false },
+        )
+    }
+    if (showLanguage) {
+        val activity = LocalActivity.current
+        val context = LocalContext.current
+        LanguageDialog(
+            selected = remember { AppLocales.current(context) },
+            onSelect = { language ->
+                // Aktivita se po změně jazyka vytvoří znovu – dialog už nemá zůstat otevřený.
+                showLanguage = false
+                activity?.let { AppLocales.set(it, language) }
+            },
+            onDismiss = { showLanguage = false },
         )
     }
     if (showAbout) AboutScreen(onClose = { showAbout = false })

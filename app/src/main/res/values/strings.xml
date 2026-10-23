@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Počasí</string>
+    <!-- Jazyk, ve kterém jsou tyto texty (vyhledávání míst, geokódování, popisky mapy). -->
+    <string name="content_language">cs</string>
 
     <string name="tab_today">Dnes</string>
     <string name="tab_outlook">Výhled</string>
@@ -16,6 +18,8 @@
     <string name="theme_light">Světlý</string>
     <string name="theme_dark">Tmavý</string>
     <string name="theme_system">Podle systému</string>
+    <string name="menu_language">Jazyk</string>
+    <string name="language_system">Podle systému</string>
     <string name="menu_about">O aplikaci</string>
     <string name="about_version_full">Verze %1$s (%2$d)</string>
     <string name="about_tagline">Předpověď počasí a radar srážek pro Česko</string>
@@ -110,6 +114,17 @@
         <item>jihozápadně</item>
         <item>západně</item>
         <item>severozápadně</item>
+    </string-array>
+
+    <string-array name="wind_direction_short">
+        <item>S</item>
+        <item>SV</item>
+        <item>V</item>
+        <item>JV</item>
+        <item>J</item>
+        <item>JZ</item>
+        <item>Z</item>
+        <item>SZ</item>
     </string-array>
 
     <string name="radar_title">Radar srážek</string>

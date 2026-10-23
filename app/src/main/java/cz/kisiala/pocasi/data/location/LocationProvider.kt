@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import cz.kisiala.pocasi.data.AppLocales
 import java.util.Locale
 import kotlin.coroutines.resume
 
@@ -68,7 +69,7 @@ class LocationProvider(context: Context) {
     /** Název obce pro souřadnice, nebo `null`, pokud geokódování není k dispozici. */
     suspend fun placeName(latitude: Double, longitude: Double): String? {
         if (!Geocoder.isPresent()) return null
-        val geocoder = Geocoder(appContext, Locale.forLanguageTag("cs-CZ"))
+        val geocoder = Geocoder(appContext, Locale.forLanguageTag(AppLocales.contentLanguage(appContext)))
         val address = withTimeoutOrNull(GEOCODER_TIMEOUT_MS) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 suspendCancellableCoroutine<Address?> { cont ->
