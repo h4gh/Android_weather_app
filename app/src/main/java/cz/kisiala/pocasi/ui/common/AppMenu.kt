@@ -21,12 +21,12 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -80,7 +80,7 @@ class AppMenuActions(
 )
 
 /**
- * Tlačítko ⋮ s menu přes celou šířku: rychlé volby Vzhled a Jazyk přímo v menu,
+ * Tlačítko s ozubeným kolem a menu přes celou šířku: rychlé volby Vzhled a Jazyk přímo v menu,
  * Upozornění (kolik je zapnutých a kdy přijde další) a O aplikaci otevírají vlastní obrazovku.
  */
 @Composable
@@ -88,7 +88,7 @@ fun AppOverflowMenu(actions: AppMenuActions) {
     val visible = remember { MutableTransitionState(false) }
     Box {
         IconButton(onClick = { visible.targetState = true }) {
-            Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.action_more))
+            Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.action_settings))
         }
         // Popup drží i během zavírací animace.
         if (visible.currentState || visible.targetState) {

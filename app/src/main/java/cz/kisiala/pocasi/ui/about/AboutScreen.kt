@@ -3,6 +3,7 @@ package cz.kisiala.pocasi.ui.about
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import androidx.annotation.ArrayRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,6 +44,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -52,6 +54,10 @@ import androidx.core.net.toUri
 import cz.kisiala.pocasi.BuildConfig
 import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.ui.today.WeatherCard
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
 
 /** Odkaz v textu O aplikaci. */
 private class Link(@StringRes val label: Int, val url: String)
@@ -131,6 +137,8 @@ private fun AboutContent(onClose: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             AppHeader()
+            SectionTitle(R.string.about_changelog_title)
+            ChangelogCard()
             SectionTitle(R.string.about_author_title)
             AuthorCard()
             SectionTitle(R.string.about_sources_title)
@@ -239,6 +247,41 @@ private fun AuthorCard() {
 }
 
 private const val AUTHOR_EMAIL = "o.kisiala@gmail.com"
+
+/** Vydané verze od nejnovější; při vydání nové verze přidat řádek a pole `changelog_…` v obou jazycích. */
+private val RELEASES = listOf(
+    Release("0.3.0", LocalDate.of(2026, 10, 24), R.array.changelog_0_3_0),
+    Release("0.2.0", LocalDate.of(2026, 10, 23), R.array.changelog_0_2_0),
+    Release("0.1.0", LocalDate.of(2026, 10, 22), R.array.changelog_0_1_0),
+)
+
+private class Release(val version: String, val date: LocalDate, @ArrayRes val changes: Int)
+
+@Composable
+private fun ChangelogCard() {
+    val dateFormat = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+        .withLocale(Locale.forLanguageTag(stringResource(R.string.content_language)))
+    WeatherCard {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            RELEASES.forEachIndexed { index, release ->
+                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        stringResource(R.string.about_changelog_version, release.version, release.date.format(dateFormat)),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = if (index == 0) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    stringArrayResource(release.changes).forEach { change ->
+                        Row {
+                            Text("•", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(end = 8.dp))
+                            Text(change, style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun SectionTitle(@StringRes text: Int) {

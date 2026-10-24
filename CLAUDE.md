@@ -1,7 +1,7 @@
 # Počasí – Android aplikace s předpovědí pro ČR
 
 Nativní Android aplikace s předpovědí počasí pro Českou republiku z dat ČHMÚ.
-UI je česky a anglicky (menu ⋮ → Jazyk). Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 11 (Android Studio).
+UI je česky a anglicky (menu ⚙ → Jazyk). Testovací zařízení: Google Pixel 10 Pro XL, vývoj na Windows 11 (Android Studio).
 
 ## Obrazovky (spodní Navigation Bar)
 
@@ -38,8 +38,8 @@ UI je česky a anglicky (menu ⋮ → Jazyk). Testovací zařízení: Google Pix
     gesta patří mapě), dialog Vzhled a stránka O aplikaci, žádost o oprávnění k poloze; vytváří jednu instanci
     `ForecastViewModel`, kterou sdílí Dnes i Výhled (jeden dotaz na API).
   - `ui/ForecastViewModel` – UiState: loading / data / error, pull-to-refresh, výběr místa.
-  - `ui/common/` – `LoadingState`, `ErrorState`, `PlacesMenu`, `AppMenu` (menu ⋮ na všech obrazovkách, `AppearanceDialog`).
-  - `ui/about/AboutScreen` – celoobrazovková stránka O aplikaci: verze, autor a kontakt, zdroje dat s atribucemi.
+  - `ui/common/` – `LoadingState`, `ErrorState`, `PlacesMenu`, `AppMenu` (menu pod ozubeným kolem ⚙ na všech obrazovkách: panel přes celou šířku s rychlou volbou Vzhled + OLED a Jazyk, souhrn Upozornění, O aplikaci).
+  - `ui/about/AboutScreen` – celoobrazovková stránka O aplikaci: verze, novinky ve verzích (`RELEASES` + pole `changelog_…` v obou jazycích), autor a kontakt, zdroje dat s atribucemi.
   - `ui/search/` – `PlaceSearchScreen` + `PlaceSearchViewModel` (celoobrazovkové hledání, ☆ u výsledků).
   - `ui/favorites/FavoritesScreen` – úprava oblíbených: tažení za úchyt (řádky s `key`), odebrání s „Vrátit“.
   - `model/Radar` – geometrie kompozitu (`RadarGrid`, ořez na datovou oblast), škála ČHMÚ (`RadarScale`),
@@ -165,7 +165,8 @@ Zbývá / známá omezení:
   `adb install -r app/build/outputs/apk/release/app-release.apk`.
 - Verze: `versionName`/`versionCode` v `app/build.gradle.kts`. Před vydáním nové verze zvýšit `versionCode` o 1
   (jinak Android aktualizaci odmítne) a `versionName` (MAJOR.MINOR.PATCH). Vydané APK se nahrává na Google Drive
-  `G:/My Drive/03_Development/Android_release/` jako `Pocasi-v<versionName>.apk`.
+  `G:/My Drive/03_Development/Android_release/` jako `Pocasi-v<versionName>.apk`. Vedle něj je úplný changelog `pocasi-changelog.md` (nejnovější verze nahoře) – při každém vydání
+  doplnit novou verzi tam i do novinek v O aplikaci (`RELEASES` v `AboutScreen` + `changelog_…` v obou `strings.xml`).
 - Release build (`assembleRelease`) je s R8 a podepsaný vlastním klíčem `C:/Users/ondre/keys/pocasi-release.jks`
   (alias `pocasi`). Cesta a hesla jsou v `keystore.properties` v kořeni projektu – **není v gitu**.
   Bez tohoto souboru vznikne nepodepsané APK. Debug build dál používá debug klíč – release a debug

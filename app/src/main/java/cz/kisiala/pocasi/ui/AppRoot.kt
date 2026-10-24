@@ -27,6 +27,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBarItemDefaults
+import cz.kisiala.pocasi.ui.theme.WeatherTheme
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -102,12 +112,37 @@ fun AppRoot(container: AppContainer) {
     Scaffold(
         bottomBar = {
             NavigationBar {
+                // OLED: místo šedého podkladu vybrané položky jen tenký obrys jako u karet.
+                val black = WeatherTheme.blackBackground
+                val outline = MaterialTheme.colorScheme.outlineVariant
                 AppTab.entries.forEach { item ->
                     val selected = item.ordinal == pagerState.targetPage
                     NavigationBarItem(
                         selected = selected,
                         onClick = { open(item) },
-                        icon = { Icon(item.icon, contentDescription = null) },
+                        icon = {
+                            Icon(
+                                item.icon,
+                                contentDescription = null,
+                                modifier = if (black && selected) {
+                                    Modifier.drawBehind {
+                                        // Rozměr indikátoru M3 (64 × 32 dp), vystředěný na ikonu.
+                                        val pill = Size(64.dp.toPx(), 32.dp.toPx())
+                                        val stroke = 1.dp.toPx()
+                                        drawRoundRect(
+                                            outline,
+                                            topLeft = Offset((size.width - pill.width + stroke) / 2, (size.height - pill.height + stroke) / 2),
+                                            size = Size(pill.width - stroke, pill.height - stroke),
+                                            cornerRadius = CornerRadius(pill.height / 2),
+                                            style = Stroke(stroke),
+                                        )
+                                    }
+                                } else Modifier,
+                            )
+                        },
+                        colors = if (black) {
+                            NavigationBarItemDefaults.colors(indicatorColor = Color.Transparent)
+                        } else NavigationBarItemDefaults.colors(),
                         label = {
                             Text(
                                 stringResource(item.label),
