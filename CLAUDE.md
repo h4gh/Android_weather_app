@@ -32,7 +32,7 @@ UI je česky a anglicky (menu ⋮ → Jazyk). Testovací zařízení: Google Pix
     je vybrané, záložní Frýdek-Místek jen bez polohy i oblíbených), `selectedPlace`, přidání/odebrání/pořadí
     oblíbených. `data/PlaceStore` je trvale ukládá do DataStore (JSON) i s naposledy vybraným místem.
   - `data/location/LocationProvider` – poloha a reverzní geokódování.
-  - `data/SettingsRepository` – nastavení v DataStore (`themeMode`: Světlý / Tmavý / Podle systému),
+  - `data/SettingsRepository` – nastavení v DataStore (`themeMode`: Světlý / Tmavý / Podle systému; `blackBackground`: čistě černé pozadí a karty s obrysem v tmavém režimu pro OLED),
     `MainActivity` z něj odvozuje `darkTheme` pro `PocasiTheme` i styl systémových lišt.
   - `ui/AppRoot` – Scaffold s Navigation Barem a `HorizontalPager` (swipe mezi obrazovkami, na Radaru vypnutý –
     gesta patří mapě), dialog Vzhled a stránka O aplikaci, žádost o oprávnění k poloze; vytváří jednu instanci

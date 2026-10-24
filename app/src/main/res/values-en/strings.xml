@@ -16,6 +16,8 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_system">System default</string>
+    <string name="theme_black_background">Black background (OLED)</string>
+    <string name="theme_black_background_hint">In dark mode, saves battery on OLED screens</string>
     <string name="menu_language">Language</string>
     <string name="language_system">System default</string>
     <string name="menu_about">About</string>

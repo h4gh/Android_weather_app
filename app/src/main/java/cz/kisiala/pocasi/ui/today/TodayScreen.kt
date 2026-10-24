@@ -1,5 +1,6 @@
 package cz.kisiala.pocasi.ui.today
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,6 +65,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cz.kisiala.pocasi.ui.theme.WeatherTheme
 import cz.kisiala.pocasi.R
 import cz.kisiala.pocasi.model.Forecast
 import cz.kisiala.pocasi.model.NearbyPrecipitation
@@ -442,6 +444,7 @@ fun WeatherCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        border = if (WeatherTheme.blackBackground) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
         content = content,
     )
 }

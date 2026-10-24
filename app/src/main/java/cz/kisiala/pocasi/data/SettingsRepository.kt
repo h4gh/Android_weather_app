@@ -1,6 +1,7 @@
 package cz.kisiala.pocasi.data
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -29,6 +30,13 @@ class SettingsRepository(context: Context) {
         dataStore.edit { it[THEME_MODE] = mode.name }
     }
 
+    /** Čistě černé pozadí v tmavém režimu (OLED); výchozí vypnuto. */
+    val blackBackground: Flow<Boolean> = dataStore.data.map { it[BLACK_BACKGROUND] ?: false }
+
+    suspend fun setBlackBackground(enabled: Boolean) {
+        dataStore.edit { it[BLACK_BACKGROUND] = enabled }
+    }
+
     /** Časy a místo upozornění s počasím; výchozí = žádné časy, Moje poloha. */
     val notifications: Flow<NotificationSettings> = dataStore.data.map { decodeNotifications(it[NOTIFICATIONS]) }
 
@@ -47,6 +55,7 @@ class SettingsRepository(context: Context) {
 
     private companion object {
         val THEME_MODE = stringPreferencesKey("theme_mode")
+        val BLACK_BACKGROUND = booleanPreferencesKey("black_background")
         val NOTIFICATIONS = stringPreferencesKey("notifications")
     }
 }

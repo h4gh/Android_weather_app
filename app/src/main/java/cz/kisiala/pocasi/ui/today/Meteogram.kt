@@ -285,11 +285,10 @@ fun DrawScope.drawOverviewMeteogram(
     val tempBottom = barsBottom - 40.dp.toPx()
 
     if (selectedDay != null && selectedDay in dayLabels.indices) {
-        drawRoundRect(
+        drawRect(
             highlight,
             topLeft = Offset(selectedDay * dayWidth, 0f),
             size = Size(dayWidth, size.height),
-            cornerRadius = CornerRadius(8.dp.toPx()),
         )
     }
 

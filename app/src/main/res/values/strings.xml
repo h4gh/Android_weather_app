@@ -18,6 +18,8 @@
     <string name="theme_light">Světlý</string>
     <string name="theme_dark">Tmavý</string>
     <string name="theme_system">Podle systému</string>
+    <string name="theme_black_background">Černé pozadí (OLED)</string>
+    <string name="theme_black_background_hint">V tmavém režimu, šetří baterii OLED displeje</string>
     <string name="menu_language">Jazyk</string>
     <string name="language_system">Podle systému</string>
     <string name="menu_about">O aplikaci</string>

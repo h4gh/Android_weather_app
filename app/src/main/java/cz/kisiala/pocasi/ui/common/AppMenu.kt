@@ -9,15 +9,18 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -95,7 +98,13 @@ private val ThemeMode.label: Int
 
 /** Výběr vzhledu – volba se uplatní hned. */
 @Composable
-fun AppearanceDialog(selected: ThemeMode, onSelect: (ThemeMode) -> Unit, onDismiss: () -> Unit) {
+fun AppearanceDialog(
+    selected: ThemeMode,
+    onSelect: (ThemeMode) -> Unit,
+    blackBackground: Boolean,
+    onBlackBackgroundChange: (Boolean) -> Unit,
+    onDismiss: () -> Unit,
+) {
     // Pořadí jako v zadání: Světlý / Tmavý / Podle systému.
     ChoiceDialog(
         title = stringResource(R.string.menu_appearance),
@@ -104,6 +113,26 @@ fun AppearanceDialog(selected: ThemeMode, onSelect: (ThemeMode) -> Unit, onDismi
         label = { stringResource(it.label) },
         onSelect = onSelect,
         onDismiss = onDismiss,
+        footer = {
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp)
+                    .toggleable(value = blackBackground, onValueChange = onBlackBackgroundChange, role = Role.Switch),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f).padding(end = 16.dp)) {
+                    Text(stringResource(R.string.theme_black_background), style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        stringResource(R.string.theme_black_background_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = blackBackground, onCheckedChange = null)
+            }
+        },
     )
 }
 
@@ -134,32 +163,36 @@ private fun <T> ChoiceDialog(
     label: @Composable (T) -> String,
     onSelect: (T) -> Unit,
     onDismiss: () -> Unit,
+    footer: @Composable () -> Unit = {},
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            Column(Modifier.selectableGroup()) {
-                options.forEach { option ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 48.dp)
-                            .selectable(
-                                selected = option == selected,
-                                onClick = { onSelect(option) },
-                                role = Role.RadioButton,
-                            ),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        RadioButton(selected = option == selected, onClick = null)
-                        Text(
-                            label(option),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 16.dp),
-                        )
+            Column {
+                Column(Modifier.selectableGroup()) {
+                    options.forEach { option ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .selectable(
+                                    selected = option == selected,
+                                    onClick = { onSelect(option) },
+                                    role = Role.RadioButton,
+                                ),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = option == selected, onClick = null)
+                            Text(
+                                label(option),
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = 16.dp),
+                            )
+                        }
                     }
                 }
+                footer()
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },

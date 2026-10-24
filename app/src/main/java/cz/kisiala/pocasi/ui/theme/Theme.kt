@@ -10,20 +10,37 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val LocalWeatherColors = staticCompositionLocalOf { LightWeatherColors }
+private val LocalBlackBackground = staticCompositionLocalOf { false }
 
 @Composable
 fun PocasiTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
+    blackBackground: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = appColorScheme(LocalContext.current, darkTheme, dynamicColor)
+    val black = darkTheme && blackBackground
+    val colorScheme = appColorScheme(LocalContext.current, darkTheme, dynamicColor).let {
+        // OLED: černé pozadí, karty i spodní lišta (karty oddělí tenký obrys, viz WeatherCard);
+        // dialogy a menu (surfaceContainerHigh*) zůstávají šedé, aby nesplývaly s pozadím.
+        if (black) {
+            it.copy(
+                background = Color.Black,
+                surface = Color.Black,
+                surfaceDim = Color.Black,
+                surfaceContainerLowest = Color.Black,
+                surfaceContainerLow = Color.Black,
+                surfaceContainer = Color.Black,
+            )
+        } else it
+    }
     val weatherColors = weatherColors(darkTheme)
 
-    CompositionLocalProvider(LocalWeatherColors provides weatherColors) {
+    CompositionLocalProvider(LocalWeatherColors provides weatherColors, LocalBlackBackground provides black) {
         MaterialTheme(colorScheme = colorScheme, content = content)
     }
 }
@@ -42,4 +59,8 @@ fun weatherColors(darkTheme: Boolean): WeatherColors = if (darkTheme) DarkWeathe
 object WeatherTheme {
     val colors: WeatherColors
         @Composable get() = LocalWeatherColors.current
+
+    /** Tmavý režim s čistě černým pozadím (OLED) – karty mají místo podkladu obrys. */
+    val blackBackground: Boolean
+        @Composable get() = LocalBlackBackground.current
 }

@@ -96,9 +96,12 @@ fun AppRoot(container: AppContainer) {
     if (showAppearance) {
         val settings = container.settingsRepository
         val themeMode by settings.themeMode.collectAsStateWithLifecycle(ThemeMode.System)
+        val blackBackground by settings.blackBackground.collectAsStateWithLifecycle(false)
         AppearanceDialog(
             selected = themeMode,
             onSelect = { container.appScope.launch { settings.setThemeMode(it) } },
+            blackBackground = blackBackground,
+            onBlackBackgroundChange = { container.appScope.launch { settings.setBlackBackground(it) } },
             onDismiss = { showAppearance = false },
         )
     }

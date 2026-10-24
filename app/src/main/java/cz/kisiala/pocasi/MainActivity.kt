@@ -29,8 +29,11 @@ class MainActivity : ComponentActivity() {
         val themeModes = container.settingsRepository.themeMode
         // Malé čtení z DataStore – ať se při zvoleném vzhledu první snímek nevykreslí v opačném.
         val initialThemeMode = runBlocking { themeModes.first() }
+        val blackBackgrounds = container.settingsRepository.blackBackground
+        val initialBlackBackground = runBlocking { blackBackgrounds.first() }
         setContent {
             val themeMode by themeModes.collectAsStateWithLifecycle(initialThemeMode)
+            val blackBackground by blackBackgrounds.collectAsStateWithLifecycle(initialBlackBackground)
             val darkTheme = themeMode.isDark(isSystemInDarkTheme())
             // Ikony ve stavovém a navigačním řádku podle zvoleného vzhledu, ne podle systému.
             DisposableEffect(darkTheme) {
@@ -40,7 +43,7 @@ class MainActivity : ComponentActivity() {
                 )
                 onDispose {}
             }
-            PocasiTheme(darkTheme = darkTheme) {
+            PocasiTheme(darkTheme = darkTheme, blackBackground = blackBackground) {
                 AppRoot(container)
             }
         }
