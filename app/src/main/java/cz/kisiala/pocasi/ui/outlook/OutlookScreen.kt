@@ -225,8 +225,13 @@ private fun OutlookContent(
                 hours = overviewHours,
                 selectedDay = expanded,
                 onDayClick = { index ->
-                    expanded = index
-                    scrollRequest = ScrollRequest(index)
+                    // Opětovné klepnutí na otevřený den ho zavře (bez rolování).
+                    if (expanded == index) {
+                        expanded = null
+                    } else {
+                        expanded = index
+                        scrollRequest = ScrollRequest(index)
+                    }
                 },
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
             )
