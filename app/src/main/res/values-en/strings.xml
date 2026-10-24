@@ -196,6 +196,14 @@
     <string name="cond_snow">Snow</string>
 
     <string name="menu_notifications">Notifications</string>
+    <string name="menu_notifications_off">Off</string>
+    <string name="menu_notifications_blocked">Notifications are blocked in system settings</string>
+    <plurals name="menu_notifications_on">
+        <item quantity="one">%d on</item>
+        <item quantity="other">%d on</item>
+    </plurals>
+    <string name="menu_option_system">System</string>
+    <string name="menu_version">Version %1$s</string>
     <string name="notif_channel_name">Weather at set times</string>
     <string name="notif_channel_description">Current weather and whether to take an umbrella, at the times set in the app</string>
     <string name="notif_title">%1$s %2$s · %3$s</string>

@@ -199,6 +199,16 @@
     <string name="cond_snow">Sněžení</string>
 
     <string name="menu_notifications">Upozornění</string>
+    <string name="menu_notifications_off">Vypnuto</string>
+    <string name="menu_notifications_blocked">Upozornění jsou v systému zakázaná</string>
+    <plurals name="menu_notifications_on">
+        <item quantity="one">%d zapnuté</item>
+        <item quantity="few">%d zapnutá</item>
+        <item quantity="many">%d zapnutých</item>
+        <item quantity="other">%d zapnutých</item>
+    </plurals>
+    <string name="menu_option_system">Systém</string>
+    <string name="menu_version">Verze %1$s</string>
     <string name="notif_channel_name">Počasí v nastavený čas</string>
     <string name="notif_channel_description">Aktuální počasí a rada, zda si vzít deštník, v časech nastavených v aplikaci</string>
     <string name="notif_title">%1$s %2$s · %3$s</string>

@@ -386,6 +386,12 @@ private fun nextText(time: NotificationTime): String {
     if (!time.enabled) return ""
     val now = ZonedDateTime.now()
     val next = time.nextAfter(now) ?: return ""
+    return nextOccurrenceText(next, now)
+}
+
+/** „Příště zítra v 7:00“ – sdílí ho i menu ⋮. */
+@Composable
+fun nextOccurrenceText(next: ZonedDateTime, now: ZonedDateTime): String {
     val clock = formatTime(next.hour, next.minute)
     val days = ChronoUnit.DAYS.between(now.toLocalDate(), next.toLocalDate())
     val whenText = when (days) {
