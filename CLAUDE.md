@@ -164,10 +164,10 @@ Zbývá / známá omezení:
   se srozumitelným názvem: `app/build/outputs/share/app-pocasi_release.apk`. Do telefonu:
   `adb install -r app/build/outputs/apk/release/app-release.apk`.
 - Verze: `versionName`/`versionCode` v `app/build.gradle.kts`. Před vydáním nové verze zvýšit `versionCode` o 1
-  (jinak Android aktualizaci odmítne) a `versionName` (MAJOR.MINOR.PATCH). Vydané APK se nahrává na Google Drive
-  `G:/My Drive/03_Development/Android_release/` jako `Pocasi-v<versionName>.apk`. Vedle něj je úplný changelog `pocasi-changelog.md` (nejnovější verze nahoře) – při každém vydání
+  (jinak Android aktualizaci odmítne) a `versionName` (MAJOR.MINOR.PATCH). Vydané APK se nahrává
+  do soukromé složky na Google Drive jako `Pocasi-v<versionName>.apk`. Vedle něj je úplný changelog `pocasi-changelog.md` (nejnovější verze nahoře) – při každém vydání
   doplnit novou verzi tam i do novinek v O aplikaci (`RELEASES` v `AboutScreen` + `changelog_…` v obou `strings.xml`).
-- Release build (`assembleRelease`) je s R8 a podepsaný vlastním klíčem `C:/Users/ondre/keys/pocasi-release.jks`
+- Release build (`assembleRelease`) je s R8 a podepsaný vlastním klíčem (soubor `.jks` mimo repozitář)
   (alias `pocasi`). Cesta a hesla jsou v `keystore.properties` v kořeni projektu – **není v gitu**.
   Bez tohoto souboru vznikne nepodepsané APK. Debug build dál používá debug klíč – release a debug
   nejdou nainstalovat přes sebe (jiný podpis), je nutné nejdřív odinstalovat.

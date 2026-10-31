@@ -59,3 +59,7 @@ v kořeni projektu, který v repozitáři není. Bez něj vznikne nepodepsané A
 ## Autor
 
 Ondřej Kisiala – připomínky a návrhy na o.kisiala@gmail.com
+
+## Licence
+
+[MIT](LICENSE)
